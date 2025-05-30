@@ -6,3 +6,6 @@
 **/*in*
 **/*.in*
 **/*.swp*
+bin
+objs
+lib
