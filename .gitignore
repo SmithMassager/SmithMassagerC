@@ -6,6 +6,7 @@
 **/*in*
 **/*.in*
 **/*.swp*
+**/*.backup*
 bin
 objs
 lib
