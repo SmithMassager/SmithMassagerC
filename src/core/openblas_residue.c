@@ -7,7 +7,6 @@
 
 #include "cblas.h"
 #include "gmp.h"
-#include "iml.h"
 
 #include "arith_utils.h"
 #include "mods.c"
