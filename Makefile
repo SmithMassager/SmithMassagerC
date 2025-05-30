@@ -2,7 +2,7 @@
 
 include defs.mk
 
-default: examples lib
+default: lib
 
 #all: lib shared examples tuning version
 # Everything related to iherm under test/ are broken.
