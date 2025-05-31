@@ -3,7 +3,7 @@
 include defs.mk
 
 default: lib examples
-
+	
 #all: lib shared examples tuning version
 # Everything related to iherm under test/ are broken.
 all: lib shared examples
@@ -11,6 +11,9 @@ all: lib shared examples
 ##################
 
 lib:
+	mkdir -p lib
+	mkdir -p bin
+	mkdir -p objs
 	$(MAKE) $(MAKEOPTS) --directory=src lib
 	cp src/maple/extern.mpl lib/
 
