@@ -2,16 +2,16 @@ export BASEDIR := $(dir $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LI
 
 export CC      := gcc
 export LDLIBS  := -lopenblas -lgmp -lm -lmaplec -lflint
-export OPENBLAS := $(HOME)/OpenBLAS/install/
-export OPENBLAS_LIB_DIR := $(OPENBLAS)/lib/
-export OPENBLAS_INCLUDE_DIR := $(OPENBLAS)/include/
-#export GMP := $(HOME)/gmp/
-export GMP := $(HOME)/gmp-6.3.0/install/
-export GMP_LIB_DIR := $(GMP)/lib/
-export GMP_INCLUDE_DIR := $(GMP)/include/
-export FLINT := $(HOME)/flint-3.2.2/install/
-export FLINT_LIB_DIR := $(FLINT)/lib/
-export FLINT_INCLUDE_DIR := $(FLINT)/include/flint/
+#export OPENBLAS := $(HOME)/OpenBLAS/install/
+#export OPENBLAS_LIB_DIR := $(OPENBLAS)/lib/
+#export OPENBLAS_INCLUDE_DIR := $(OPENBLAS)/include/
+##export GMP := $(HOME)/gmp/
+#export GMP := $(HOME)/gmp-6.3.0/install/
+#export GMP_LIB_DIR := $(GMP)/lib/
+#export GMP_INCLUDE_DIR := $(GMP)/include/
+#export FLINT := $(HOME)/flint-3.2.2/install/
+#export FLINT_LIB_DIR := $(FLINT)/lib/
+#export FLINT_INCLUDE_DIR := $(FLINT)/include/flint/
 
 export INSTALL_DIR := ../maple/
 
