@@ -1,5 +1,7 @@
 .PHONY: core lift maple spinv iherm clean
 
+CFLAGS += -I$(SRCDIR)iml-1.0.3/include -I$(SRCDIR)/include
+
 lib: $(LIFTLIB)
 
 shared: $(SHAREDLIB)
@@ -17,8 +19,6 @@ $(OBJDIR)*.o: iml core lift spinv iherm
 ifdef MAPLEDIR
   $(OBJDIR)*.o: maple
 endif
-
-CFLAGS += -I$(SRCDIR)iml-1.0.3/include
 
 iml:
 	$(MAKE) $(MAKEOPTS) --directory=iml-1.0.3

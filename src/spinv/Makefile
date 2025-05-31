@@ -8,7 +8,7 @@ OBJS    += $(OBJDIR)spinv.o
 OBJS    += $(OBJDIR)unicert.o
 OBJS    += $(OBJDIR)unicert_utils.o
 
-CFLAGS += -I$(BASEDIR)include
+CFLAGS += -I$(SRCDIR)include
 CFLAGS += -I$(SRCDIR)core
 CFLAGS += -I$(SRCDIR)lift
 CFLAGS += -I$(SRCDIR)linsys

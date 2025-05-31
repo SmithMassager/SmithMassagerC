@@ -6,7 +6,7 @@ UNICERT_EXE := $(BASEDIR)bin/unicert_main
 HOR_EXE := $(BASEDIR)bin/hor_main
 SIMPLE_IHERM_EXE := $(BASEDIR)bin/simple_iherm
 
-CFLAGS += -I$(BASEDIR)include
+CFLAGS += -I$(SRCDIR)include
 
 #all: $(UNICERT_EXE) $(IHERM_EXE) $(SIMPLE_IHERM_EXE) $(HOR_EXE)
 all: $(UNICERT_EXE) $(HOR_EXE)
