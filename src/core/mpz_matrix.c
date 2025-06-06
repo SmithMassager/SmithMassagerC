@@ -10,6 +10,9 @@
 #include "rns_matrix.h"
 #include "timer.h"
 
+void mpzMatrix_extractGCD(mpzMatrix_t *v, mpzMatrix_t *g, mpzMatrix_t const * A, mpz_t const s);
+void mpzMatrix_extractVectorGCD(mpz_t c, mpzMatrix_t const * v, mpzMatrix_t const * w, mpz_t const s);
+
 mpzMatrix_t * mpzMatrix_init(long nrows, long ncols)
 {
   long i;
@@ -531,28 +534,28 @@ void mpzMatrix_extractGCD(mpzMatrix_t *v, mpzMatrix_t *g, mpzMatrix_t const * A,
   mpzMatrix_fini(w);
 }
 
-void mpzMatrix_extractVectorGCD(mpz_t c, mpzMatrix_t const * v, mpzMatrix_t const * w, mpz_t const s)
-{
-  assert(v->nrows == w->nrows);
-  assert(v->nrows == 1 && w->nrows == 1);
-  long nrows = v->nrows;
-  mpz_t g, m1, m2, tmp;
-  mpz_init(g);
-  mpzMatrix_GCD(g, w, s);
-  mpz_gcd(m1, mmgetc(v, 0, 0), s);
-  mpz_gcd(m2, mmgetc(w, 0, 0), s);
-  for (long i = 1; i < nrows; ++i) {
-    if (mpz_cmp(g, m2) == 0) break;
-    stab(c, m2, mmgetc(w, i, 0), s);
-    mpz_addmul(m2, c, mmgetc(w, i, 0));
-    mpz_mod(m2, m2, s);
-    mpz_addmul(m1, c, mmgetc(v, i, 0));
-    mpz_mod(m1, m1, s);
-  }
-  stab(c, m1, m2, s);
-  mpz_clears(g, m1, m2, tmp, NULL);
-  return;
-}
+//void mpzMatrix_extractVectorGCD(mpz_t c, mpzMatrix_t const * v, mpzMatrix_t const * w, mpz_t const s)
+//{
+//  assert(v->nrows == w->nrows);
+//  assert(v->nrows == 1 && w->nrows == 1);
+//  long nrows = v->nrows;
+//  mpz_t g, m1, m2, tmp;
+//  mpz_init(g);
+//  mpzMatrix_GCD(g, w, s);
+//  mpz_gcd(m1, mmgetc(v, 0, 0), s);
+//  mpz_gcd(m2, mmgetc(w, 0, 0), s);
+//  for (long i = 1; i < nrows; ++i) {
+//    if (mpz_cmp(g, m2) == 0) break;
+//    stab(c, m2, mmgetc(w, i, 0), s);
+//    mpz_addmul(m2, c, mmgetc(w, i, 0));
+//    mpz_mod(m2, m2, s);
+//    mpz_addmul(m1, c, mmgetc(v, i, 0));
+//    mpz_mod(m1, m1, s);
+//  }
+//  stab(c, m1, m2, s);
+//  mpz_clears(g, m1, m2, tmp, NULL);
+//  return;
+//}
 
 void mpzMatrix_vectorGCD(mpzMatrix_t * v, mpzMatrix_t const * u, mpz_t const s)
 {
@@ -579,16 +582,16 @@ void mpzMatrix_vectorGCD(mpzMatrix_t * v, mpzMatrix_t const * u, mpz_t const s)
   mpz_clears(g, ci, NULL);
 }
 
-void mpzMatrix_GCD(mpz_t res, mpzMatrix_t const * A, mpz_t const s)
-{
-  mpz_set(res, s);
-  long nrows = A->nrows, ncols = A->ncols;
-  for (long i = 0; i < nrows; ++i) for (long j = 0; j < ncols; ++j) {
-    if (mpz_cmp_ui(res, 1) == 0) return;
-    mpz_gcd(res, res, mmgetc(A, i, j));
-  }
-  return;
-}
+//void mpzMatrix_GCD(mpz_t res, mpzMatrix_t const * A, mpz_t const s)
+//{
+//  mpz_set(res, s);
+//  long nrows = A->nrows, ncols = A->ncols;
+//  for (long i = 0; i < nrows; ++i) for (long j = 0; j < ncols; ++j) {
+//    if (mpz_cmp_ui(res, 1) == 0) return;
+//    mpz_gcd(res, res, mmgetc(A, i, j));
+//  }
+//  return;
+//}
 
 //int mpzMatrix_findMassager(mpzMatrix_t *A, mpzMatrix_t *E, mpzMatrix_t *U,
 //			    mpzMatrix_t *M, mpzMatrix_t *S, mpzMatrix_t *T,

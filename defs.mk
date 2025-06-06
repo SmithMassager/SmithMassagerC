@@ -2,21 +2,22 @@ export BASEDIR := $(dir $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LI
 
 export CC      := gcc
 export LDLIBS  := -lopenblas -lgmp -lm -lmaplec -lflint
-export OPENBLAS := $(HOME)/OpenBLAS/install/
+export prefix := /Users/ziwenwang/repo/flint-nix-builds/
+export OPENBLAS := $(prefix)/openblas/
 export OPENBLAS_LIB_DIR := $(OPENBLAS)/lib/
 export OPENBLAS_INCLUDE_DIR := $(OPENBLAS)/include/
-export GMP := $(HOME)/gmp-6.3.0/install/
+export GMP := $(prefix)/gmp/
 export GMP_LIB_DIR := $(GMP)/lib/
 export GMP_INCLUDE_DIR := $(GMP)/include/
-export FLINT := $(HOME)/flint-3.2.2/install/
+export FLINT := $(prefix)/flint/
 export FLINT_LIB_DIR := $(FLINT)/lib/
-export FLINT_INCLUDE_DIR := $(FLINT)/include/flint/
+export FLINT_INCLUDE_DIR := $(FLINT)/include/
 
 export INSTALL_DIR := ../maple/
 
 #export THREAD := true
 
-export MAPLEDIR := /opt/maple2023/
+export MAPLEDIR := /Library/Frameworks/Maple.framework/Versions/2025/
 
 export LDFLAGS := #empty
 export CFLAGS  := #empty
@@ -28,9 +29,9 @@ export LIFTLIB := $(BASEDIR)lib/libhnfproj.a
 export SHAREDLIB := $(BASEDIR)lib/libhnfproj.so
 
 
-CFLAGS += -I$(MAPLEDIR)/extern/include/ -Wl,-rpath=$(MAPLEDIR)/bin.X86_64_LINUX/
+CFLAGS += -I$(MAPLEDIR)/extern/include/ -Wl,-rpath,$(MAPLEDIR)/bin.APPLE_ARM64_MACOS/ -Wl,-undefined,dynamic_lookup
 
-LDFLAGS += -L$(MAPLEDIR)/lib/ -L$(MAPLEDIR)/bin.X86_64_LINUX/
+LDFLAGS += -L$(MAPLEDIR)/lib/ -L$(MAPLEDIR)/bin.APPLE_ARM64_MACOS/
 
 ifdef OPENBLAS_LIB_DIR
   LDFLAGS += -L$(OPENBLAS_LIB_DIR) -L$(HOME)/lib/
@@ -63,6 +64,7 @@ CFLAGS  += -Wstrict-prototypes
 CFLAGS  += -Wmissing-prototypes
 CFLAGS  += -Wno-long-long
 CFLAGS  += -Wno-variadic-macros
+CFLAGS  += -Wno-implicit-function-declaration
 
 ifdef NOTIMER
   CFLAGS  += -DNOTIMER
