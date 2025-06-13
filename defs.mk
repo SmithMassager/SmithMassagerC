@@ -55,8 +55,8 @@ endif
 
 CFLAGS  += -fPIC
 CFLAGS  += -pedantic
-CFLAGS  += -Wall
-CFLAGS  += -Wextra
+CFLAGS  += -Wno-all
+CFLAGS  += -Wno-extra
 CFLAGS  += -Wshadow
 CFLAGS  += -Wpointer-arith
 CFLAGS  += -Wcast-align
