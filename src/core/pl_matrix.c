@@ -158,90 +158,68 @@ plMatrix_t * colPLMatrix_initFromFmpzMatrix(fmpz_mat_t const src, long X) {
       }
     }
   }
-  //for (i = 0; i < origCols; ++i) {
-  //  len = eparams[i+1] - eparams[i];
-  //  if (len == 0) continue;
-  //  else {
-  //    for (j = 0; j < origRows; ++j) {
-  //      entry = fmpz_mat_entry(src, j, i);
-  //      sz = fmpz_size(entry);
-  //      for (k = 0; k < len; ++k) {
-  //        tar = fmpz_mat_entry(matrix, j, eparams[i] + k);
-  //        if ((k*X)/FLINT_BITS < sz) {
-  //          extractBits(tar, entry, k*X, min((k+1)*X - 1, sz * FLINT_BITS - 1));
-  //        } else {
-  //          fmpz_set_ui(tar, 0);
-  //        }
-  //      }
-  //    }
-  //  }
-  //}
   fmpz_clear(mx);
   fmpz_clear(P);
 
   return M;
 }
 
-//plMatrix_t * rowPLMatrix_initFromMpzMatrix(fmpz_mat_t const *src) {
-//  long origRows = src->nrows;
-//  long origCols = src->ncols;
-//  long X = 1<<16;
-//  long *eparams = malloc((origRows+1) * sizeof(long));
-//  plMatrix_t *M = malloc(sizeof(plMatrix_t));
-//  M->origRows = origRows; M->origCols = origCols; M->eparams = eparams;
-//
-//  mpz_t mx, P;
-//  mpz_inits(mx, P, NULL);
-//
-//  eparams[0] = 0;
-//  for (long i = 0; i < origRows; ++i) {
-//    eparams[i+1] = eparams[i];
-//    mpzMatrix_maxRowEntry(mx, src, i);
-//    mpz_add_ui(mx, mx, 1);
-//    mpz_set_si(P, 1);
-//    while(mpz_cmpabs(P, mx) < 0) {
-//      mpz_mul_ui(P, P, X);
-//      ++eparams[i+1];
-//    }
-//  }
-//
-//  long newRows = eparams[origRows];
-//  residue_t *matrix = residue_init(newRows, origCols, X);
-//  M->matrix = matrix;
-//  mpz_ptr entry;
-//  long sz;
-//  mp_limb_t *limb;
-//  long i, j, k, l, count, data, len;
-//
-//  for (i = 0; i < origRows; ++i) {
-//    len = eparams[i+1] - eparams[i];
-//    if (len == 0) continue;
-//    else if (len == 1) {
-//      for (j = 0; j < origCols; ++j) {
-//	residue_set(matrix, eparams[i], j, mpz_get_d(fmpz_mat_entry(src, i, j)));
-//      }
-//    } else {
-//       for (j = 0; j < origCols; ++j) {
-//	entry = fmpz_mat_entry(src, i, j);
-//	sz = ABSIZ(entry);
-//	limb = PTR(entry);
-//	l = 0, count = 0;
-//	for (k = 0; k < len; ++k) {
-//	  if (l < sz) {
-//	    data = (limb[l] >> (16*count)) & 0xffff;
-//	    // We assume that each lib is 64 bit i.e. 8 bytes.
-//	    if (++count == 4) { ++l; count = 0; }
-//	  } else {
-//	    data = 0;
-//	  }
-//	  residue_set(matrix, eparams[i]+k, j, (double)data);
-//	}
-//      }
-//    }
-//  }
-//  mpz_clears(mx, P, NULL);
-//  return M;
-//}
+
+plMatrix_t * rowPLMatrix_initFromFmpzMatrix(fmpz_mat_t const src, long X) {
+  long origRows = fmpz_mat_nrows(src);
+  long origCols = fmpz_mat_ncols(src);
+  long *eparams = malloc((origRows+1) * sizeof(long));
+  plMatrix_t *M = malloc(sizeof(plMatrix_t));
+  M->origRows = origRows; M->origCols = origCols; M->eparams = eparams;
+
+  fmpz_t mx, P;
+  fmpz_init(mx);
+  fmpz_init(P);
+
+  eparams[0] = 0;
+  for (long i = 0; i < origRows; ++i) {
+    eparams[i+1] = eparams[i];
+    fmpzMatrix_maxRowEntry(mx, src, i);
+    fmpz_add_ui(mx, mx, 1);
+    fmpz_set_si(P, 1);
+    while(fmpz_cmpabs(P, mx) < 0) {
+      fmpz_mul_2exp(P, P, X);
+      ++eparams[i+1];
+    }
+  }
+
+  long newRows = eparams[origRows];
+  fmpz_mat_t matrix;
+  fmpz_mat_init(matrix, newRows, origCols);
+  M->matrix[0] = matrix[0];
+  fmpz *entry, *tar;
+  long sz;
+  long i, j, k, l, len, bitcnts;
+
+  for (i = 0; i < origRows; ++i) {
+    len = eparams[i+1] - eparams[i];
+    if (len == 0) { continue;
+    } else {
+      for (j = 0; j < origCols; ++j) {
+	entry = fmpz_mat_entry(src, i, j);
+	sz = fmpz_size(entry);
+	for (k = 0; k < len; ++k) {
+	  tar = fmpz_mat_entry(matrix, eparams[i]+k, j);
+	  if ((k * X)/FLINT_BITS < sz) {
+	    extractBits(tar, entry, k*X, min((k+1)*X-1, sz*FLINT_BITS-1));
+	  } else {
+	    fmpz_set_ui(entry, 0);
+	  }
+	}
+      }
+    }
+  }
+  fmpz_clear(mx);
+  fmpz_clear(P);
+
+  return M;
+
+}
 
 void plMatrix_fini(plMatrix_t *M) {
   //if (M != NULL) fmpz_mat_clear(M->matrix);
@@ -348,29 +326,27 @@ void cmodMulviaColPL(fmpz_mat_t dst, fmpz_mat_t const A, fmpz_mat_t const B, fmp
   fmpz_mat_clear(Cl);
 }
 
-//void cmodMulviaPL(fmpz_mat_t *dst, fmpz_mat_t const *A, fmpz_mat_t const *B, fmpz_mat_t const *F) {
-//  assert(dst->nrows == A->nrows && dst->ncols == B->ncols && A->ncols == B->nrows);
-//  mpzMatrix_zero(dst);
-//  plMatrix_t *Apl = rowPLMatrix_initFromMpzMatrix(A);
-//  plMatrix_t *Bpl = colPLMatrix_initFromMpzMatrix(B);
-//
-//  fmpz_mat_t Cl;
-//  fmpz_mat_init(Cl, Apl->eparams[Apl->origRows], Bpl->eparams[Bpl->origCols]);
-//  fmpz_mat_t C;
-//  fmpzMatrix_init(Apl->eparams[Apl->origRows], Bpl->origCols);
-//  fmpzMatrix_zero(C);
-//  fmpz_mat_mul(Cl, Apl->matrix, Bpl->matrix);
-//  colCompress(C, Cl, Bpl->eparams, F, true);
-//  rowCompress(dst, C, Apl->eparams, F, true);
-//
-//  plMatrix_fini(Apl);
-//  plMatrix_fini(Bpl);
-//  fmpz_mat_clear(Cl);
-//}
+void cmodMulviaPL(fmpz_mat_t dst, fmpz_mat_t const A, fmpz_mat_t const B, fmpz_mat_struct const *F) {
+  fmpz_mat_zero(dst);
+  long X = max(calculateBase(B), calculateBase(A));
+  plMatrix_t *Apl = rowPLMatrix_initFromFmpzMatrix(A, X);
+  plMatrix_t *Bpl = colPLMatrix_initFromFmpzMatrix(B, X);
+
+  fmpz_mat_t Cl;
+  fmpz_mat_init(Cl, Apl->eparams[Apl->origRows], Bpl->eparams[Bpl->origCols]);
+  fmpz_mat_mul(Cl, Apl->matrix, Bpl->matrix);
+  fmpz_mat_t C;
+  fmpz_mat_init(C, Apl->eparams[Apl->origRows], Bpl->origCols);
+  fmpz_mat_zero(C);
+  colCompress(C, Cl, X, Bpl->eparams, F, true);
+  rowCompress(dst, C, X, Apl->eparams, F, true);
+
+  plMatrix_fini(Apl);
+  plMatrix_fini(Bpl);
+  fmpz_mat_clear(Cl);
+}
 
 void colCompress(fmpz_mat_t dst, fmpz_mat_t const src, long X, long *eparams, fmpz_mat_struct const *F, bool cmod) {
-  assert(dst->nrows == src->nrows && dst->ncols == src->ncols);
-
   long rows = fmpz_mat_nrows(dst);
   long cols = fmpz_mat_ncols(dst);
   fmpz_mat_zero(dst);
@@ -405,37 +381,40 @@ void colCompress(fmpz_mat_t dst, fmpz_mat_t const src, long X, long *eparams, fm
   fmpz_clear(tmp);
 }
 
-//void rowCompress(fmpz_mat_t *dst, residue_t const *src, long *eparams, fmpz_mat_struct const *F, bool cmod) {
-//  assert(dst->nrows == src->nrows && dst->ncols == src->ncols);
-//
-//  long rows = dst->nrows;
-//  long cols = dst->ncols;
-//  mpz_t X, tmp;
-//  mpz_inits(X, tmp, NULL);
-//
-//  long offset = 0;
-//  for (long i = 0; i < rows; ++i) {
-//    long len = eparams[i+1] - eparams[i];
-//    mpz_set_ui(X, 1);
-//    if (len == 0) continue;
-//    for (long k = 0; k < len; ++k) {
-//      for (long j = 0; j < cols; ++j) {
-//	mpz_ptr *entry = fmpz_mat_entry(dst, i, j);
-//	mpz_mul_si(tmp, X, residue_get(src, offset, j));
-//	mpz_add(entry, entry, tmp);
-//      }
-//      for (long j = 0; j < cols; ++j) {
-//	mpz_ptr *entry = fmpz_mat_entry(dst, i, j);
-//	if (F != NULL) mpz_mod(entry, entry, fmpz_mat_entry(F, j, j));
-//	else if (F != NULL && !cmod) mpz_mod(entry, entry, fmpz_mat_entry(F, i, i));
-//      }
-//      mpz_mul_ui(X, X, 1<<16);
-//      ++offset;
-//    }
-//  }
-//
-//  mpz_clears(X, tmp, NULL);
-//}
+void rowCompress(fmpz_mat_t dst, fmpz_mat_t const src, long X, long *eparams, fmpz_mat_struct const *F, bool cmod) {
+  long rows = fmpz_mat_nrows(dst);
+  long cols = fmpz_mat_ncols(dst);
+  fmpz_mat_zero(dst);
+  fmpz_t val, tmp;
+  fmpz_init(val);
+  fmpz_init(tmp);
+
+  long offset = 0;
+  for (long i = 0; i < rows; ++i) {
+    long len = eparams[i+1] - eparams[i];
+    if (len == 0) continue;
+    fmpz_set_ui(val, 1);
+    for (long k = 0; k < len; ++k) {
+      for (long j = 0; j < cols; ++j) {
+	fmpz *entry = fmpz_mat_entry(dst, i, j);
+	fmpz_mul(tmp, val, fmpz_mat_entry(src, offset, j));
+	fmpz_add(entry, entry, tmp);
+      }
+      fmpz_mul_2exp(val, val, X);
+      ++offset;
+    }
+    if (F != NULL) {
+      for (long j = 0; j < cols; ++j) {
+	fmpz *entry = fmpz_mat_entry(dst, i, j);
+	if (cmod) fmpz_mod(entry, entry, fmpz_mat_entry(F, j, j));
+	else fmpz_mod(entry, entry, fmpz_mat_entry(F, i, i));
+      }
+    }
+  }
+
+  fmpz_clear(val);
+  fmpz_clear(tmp);
+}
 
 void cmod(fmpz_mat_t dst, fmpz_mat_t const A, fmpz_mat_t const C) {
   for (long i = 0; i < fmpz_mat_nrows(A); ++i) {

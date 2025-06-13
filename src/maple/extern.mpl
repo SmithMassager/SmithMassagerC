@@ -7,11 +7,16 @@ imlMult := DefineExternal("imlMultiply_maple", "lib/libhnfproj.so");
 add_maple := DefineExternal("add_maple", "lib/libhnfproj.so");
 fastIntCertC := DefineExternal("fastIntCert_maple", "lib/libhnfproj.so");
 iherm := DefineExternal("iherm_maple", "lib/libhnfproj.so");
-# TODO: combine plMultiply and colplMultiply into one and similarly for the other ones.
-plMultiply := DefineExternal("plMultiply_maple", "lib/libhnfproj.so");
-colplMultiply := DefineExternal("colplMultiply_maple", "lib/libhnfproj.so");
+
+# cmodMulPL, cmodMulColPL
+## A, args[1] reprsenting a matrix with appropiate size.
+## B, args[2] reprsenting a vector/matrix with appropiate size.
+## F, args[3] optinal integer.
+## Returns A.B cmod F
 cmodMulPL := DefineExternal("cmodMulviaPL_maple", "lib/libhnfproj.so");
 cmodMulColPL := DefineExternal("cmodMulviaColPL_maple", "lib/libhnfproj.so");
-cmodMulColPLMpz := DefineExternal("cmodMulviaPLmpz_maple", "lib/libhnfproj.so");
+# fmpzMult
+## A, args[1]
+## B, args[2]
+## Return A.B
 fmpzMult := DefineExternal("fmpzMult_maple", "lib/libhnfproj.so");
-#mat_add := define_external('mat_add', LIB="lib/libhnfproj.so", 'A'::ARRAY(datatype=integer[8]), 'B'::ARRAY(datatype=integer[8]), 'C'::ARRAY(datatype=integer[8]), 'n'::integer[4], 'm'::integer[4]);

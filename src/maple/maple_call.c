@@ -672,79 +672,6 @@ ALGEB M_DECL imlMultiply_maple(MKernelVector kv, ALGEB args)
   return ToMapleExpressionSequence(kv, 1, y_rt);
 }
 
-ALGEB M_DECL colplMultiply_maple(MKernelVector kv, ALGEB args)
-{
-  int argc;
-  ALGEB A_rt, B_rt, y_rt;
-  mpzMatrix_t *A, *B, *y;
-
-  argc = MapleNumArgs(kv,args);
-  if (argc < 2 || !IsMapleRTable(kv, (ALGEB)args[1])
-                || !IsMapleRTable(kv, (ALGEB)args[2])) {
-    MapleRaiseError(kv, "at least two arguments expected");
-    return NULL;
-  }
-
-  A_rt = (ALGEB)args[1];
-  B_rt = (ALGEB)args[2];
-
-  MaplePushGMPAllocators(kv, alloc_func, realloc_func, free_func);
-
-  A = mpzMatrix_fromRTable(kv, A_rt);
-  if (!A) { return NULL; }
-  B = mpzMatrix_fromRTable(kv, B_rt);
-  if (!B) { return NULL; }
-  y = mpzMatrix_init(A->nrows, B->ncols);
-
-  MultiplyViaColPL(y, A, B);
-  
-  y_rt = mpzMatrix_toRTable(kv, y);
-
-  mpzMatrix_fini(A);
-  mpzMatrix_fini(B);
-  mpzMatrix_fini(y);
-
-  MaplePopGMPAllocators(kv);
-
-  return ToMapleExpressionSequence(kv, 1, y_rt);
-}
-
-ALGEB M_DECL plMultiply_maple(MKernelVector kv, ALGEB args)
-{
-  int argc;
-  ALGEB A_rt, B_rt, y_rt;
-  mpzMatrix_t *A, *B, *y;
-
-  argc = MapleNumArgs(kv,args);
-  if (argc < 2 || !IsMapleRTable(kv, (ALGEB)args[1])
-                || !IsMapleRTable(kv, (ALGEB)args[2])) {
-    MapleRaiseError(kv, "at least two arguments expected");
-    return NULL;
-  }
-
-  A_rt = (ALGEB)args[1];
-  B_rt = (ALGEB)args[2];
-
-  MaplePushGMPAllocators(kv, alloc_func, realloc_func, free_func);
-
-  A = mpzMatrix_fromRTable(kv, A_rt);
-  if (!A) { return NULL; }
-  B = mpzMatrix_fromRTable(kv, B_rt);
-  if (!B) { return NULL; }
-  y = mpzMatrix_init(A->nrows, B->ncols);
-
-  MultiplyViaPL(y, A, B);
-  
-  y_rt = mpzMatrix_toRTable(kv, y);
-
-  mpzMatrix_fini(A);
-  mpzMatrix_fini(B);
-  mpzMatrix_fini(y);
-
-  MaplePopGMPAllocators(kv);
-
-  return ToMapleExpressionSequence(kv, 1, y_rt);
-}
 
 ALGEB M_DECL cmodMulviaColPL_maple(MKernelVector kv, ALGEB args)
 {
@@ -809,7 +736,8 @@ ALGEB M_DECL cmodMulviaPL_maple(MKernelVector kv, ALGEB args)
 {
   int argc;
   ALGEB A_rt, B_rt, F_rt, y_rt;
-  mpzMatrix_t *A, *B, *F, *y;
+  fmpz_mat_t A, B, y;
+  fmpz_mat_struct *F = malloc(sizeof(fmpz_mat_struct));
 
   argc = MapleNumArgs(kv,args);
   if (argc < 2 || !IsMapleRTable(kv, (ALGEB)args[1])
@@ -824,73 +752,27 @@ ALGEB M_DECL cmodMulviaPL_maple(MKernelVector kv, ALGEB args)
 
   MaplePushGMPAllocators(kv, alloc_func, realloc_func, free_func);
 
-  A = mpzMatrix_fromRTable(kv, A_rt);
+  fmpzMat_fromRTable(A, kv, A_rt);
   if (!A) { return NULL; }
-  B = mpzMatrix_fromRTable(kv, B_rt);
+  fmpzMat_fromRTable(B, kv, B_rt);
   if (!B) { return NULL; }
   if (argc >= 3) {
-    F = mpzMatrix_fromRTable(kv, F_rt);
+    fmpzMat_fromRTable(F, kv, F_rt);
     if (!F) { return NULL; }
   } else {
     F = NULL;
   }
-
-  y = mpzMatrix_init(A->nrows, B->ncols);
+  fmpz_mat_init(y, fmpz_mat_nrows(A), fmpz_mat_ncols(B));
 
   cmodMulviaPL(y, A, B, F);
   
-  y_rt = mpzMatrix_toRTable(kv, y);
+  y_rt = fmpzMat_toRTable(kv, y);
 
-  mpzMatrix_fini(A);
-  mpzMatrix_fini(B);
-  mpzMatrix_fini(F);
-  mpzMatrix_fini(y);
-
-  MaplePopGMPAllocators(kv);
-
-  return ToMapleExpressionSequence(kv, 1, y_rt);
-}
-
-ALGEB M_DECL cmodMulviaPLmpz_maple(MKernelVector kv, ALGEB args)
-{
-  int argc;
-  ALGEB A_rt, B_rt, F_rt, y_rt;
-  mpzMatrix_t *A, *B, *F, *y;
-
-  argc = MapleNumArgs(kv,args);
-  if (argc < 2 || !IsMapleRTable(kv, (ALGEB)args[1])
-                || !IsMapleRTable(kv, (ALGEB)args[2])) {
-    MapleRaiseError(kv, "at least two arguments expected");
-    return NULL;
-  }
-
-  A_rt = (ALGEB)args[1];
-  B_rt = (ALGEB)args[2];
-  if (argc >= 3) F_rt = (ALGEB)args[3];
-
-  MaplePushGMPAllocators(kv, alloc_func, realloc_func, free_func);
-
-  A = mpzMatrix_fromRTable(kv, A_rt);
-  if (!A) { return NULL; }
-  B = mpzMatrix_fromRTable(kv, B_rt);
-  if (!B) { return NULL; }
-  if (argc >= 3) {
-    F = mpzMatrix_fromRTable(kv, F_rt);
-    if (!F) { return NULL; }
-  } else {
-    F = NULL;
-  }
-
-  y = mpzMatrix_init(A->nrows, B->ncols);
-
-  cmodMulviaColPLMpz(y, A, B, F);
-  
-  y_rt = mpzMatrix_toRTable(kv, y);
-
-  mpzMatrix_fini(A);
-  mpzMatrix_fini(B);
-  mpzMatrix_fini(F);
-  mpzMatrix_fini(y);
+  fmpz_mat_clear(A);
+  fmpz_mat_clear(B);
+  fmpz_mat_clear(F);
+  free(F);
+  fmpz_mat_clear(y);
 
   MaplePopGMPAllocators(kv);
 
