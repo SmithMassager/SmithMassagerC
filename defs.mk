@@ -65,6 +65,7 @@ CFLAGS  += -Wmissing-prototypes
 CFLAGS  += -Wno-long-long
 CFLAGS  += -Wno-variadic-macros
 CFLAGS  += -Wno-implicit-function-declaration
+CFLAGS  += -Wno-int-conversion
 
 ifdef NOTIMER
   CFLAGS  += -DNOTIMER
