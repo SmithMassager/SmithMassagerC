@@ -1,6 +1,6 @@
 .PHONY: core lift maple spinv iherm clean
 
-CFLAGS += -I$(SRCDIR)iml-1.0.3/include -I$(SRCDIR)/include
+CFLAGS += -I$(SRCDIR)iml-1.0.3/src/ -I$(SRCDIR)/include/
 
 lib: $(LIFTLIB)
 
