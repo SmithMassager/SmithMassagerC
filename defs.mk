@@ -1,6 +1,6 @@
 export BASEDIR := $(dir $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
 
-export CC      := gcc
+export CC := gcc
 export LDLIBS  := -lopenblas -lgmp -lm -lmaplec -lflint
 export prefix := /Users/ziwenwang/repo/flint-nix-builds/
 export OPENBLAS := $(prefix)/openblas/
