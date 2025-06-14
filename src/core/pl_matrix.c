@@ -254,6 +254,7 @@ void cmodMulviaColPL(fmpz_mat_t dst, fmpz_mat_t const A, fmpz_mat_t const B, fmp
   gettimeofday(&start,0);
   long X = max(calculateBase(B), calculateBase(A));
   printf("Base chose to be %d\n", X);
+  if (X == 0) { return; }
   printf("Starting to init Apl\n");
   plMatrix_t *Apl = colPLMatrix_initFromFmpzMatrix(A, X);
 
@@ -329,8 +330,11 @@ void cmodMulviaColPL(fmpz_mat_t dst, fmpz_mat_t const A, fmpz_mat_t const B, fmp
 void cmodMulviaPL(fmpz_mat_t dst, fmpz_mat_t const A, fmpz_mat_t const B, fmpz_mat_struct const *F) {
   fmpz_mat_zero(dst);
   long X = max(calculateBase(B), calculateBase(A));
+  if (X == 0) { return; }
   plMatrix_t *Apl = rowPLMatrix_initFromFmpzMatrix(A, X);
+  if (Apl->eparams[Apl->origRows] == 0) return;
   plMatrix_t *Bpl = colPLMatrix_initFromFmpzMatrix(B, X);
+  if (Bpl->eparams[Bpl->origCols] == 0) return;
 
   fmpz_mat_t Cl;
   fmpz_mat_init(Cl, Apl->eparams[Apl->origRows], Bpl->eparams[Bpl->origCols]);
