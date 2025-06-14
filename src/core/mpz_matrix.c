@@ -10,8 +10,8 @@
 #include "rns_matrix.h"
 #include "timer.h"
 
-void mpzMatrix_extractGCD(mpzMatrix_t *v, mpzMatrix_t *g, mpzMatrix_t const * A, mpz_t const s);
-void mpzMatrix_extractVectorGCD(mpz_t c, mpzMatrix_t const * v, mpzMatrix_t const * w, mpz_t const s);
+//void mpzMatrix_extractGCD(mpzMatrix_t *v, mpzMatrix_t *g, mpzMatrix_t const * A, mpz_t const s);
+//void mpzMatrix_extractVectorGCD(mpz_t c, mpzMatrix_t const * v, mpzMatrix_t const * w, mpz_t const s);
 
 mpzMatrix_t * mpzMatrix_init(long nrows, long ncols)
 {
@@ -508,31 +508,31 @@ void mpzMatrix_scale(mpzMatrix_t * dst, mpz_t const c)
   }
 }
 
-void mpzMatrix_extractGCD(mpzMatrix_t *v, mpzMatrix_t *g, mpzMatrix_t const * A, mpz_t const s)
-{
-  mpz_t tmp, b;
-  mpzMatrix_t *w;
-  long nrows = A->nrows, ncols = A->ncols;
-  assert(v->ncols == 1);
-  assert(v->nrows == nrows);
-  assert(g->ncols == 1);
-  assert(g->nrows == nrows);
-  mpzMatrix_init(nrows, 1);
-  mpzMatrix_GCD(b, A, s);
-  mpzMatrix_copyFromMpzColumn(g, A, 0, 0);
-  mpzMatrix_setEntry_si(v, 0, 0, 1);
-
-  for (long i = 1; i < ncols; ++i) {
-    mpzMatrix_GCD(tmp, g, s);
-    if (mpz_cmp(tmp, b) == 0) break;
-    mpzMatrix_copyFromMpzColumn(w, A, i, 0);
-    mpzMatrix_extractVectorGCD(tmp, g, w, s);
-    mpzMatrix_addmul_mod(g, tmp, w, s);
-  }
-
-  mpz_clears(tmp, b, NULL);
-  mpzMatrix_fini(w);
-}
+//void mpzMatrix_extractGCD(mpzMatrix_t *v, mpzMatrix_t *g, mpzMatrix_t const * A, mpz_t const s)
+//{
+//  mpz_t tmp, b;
+//  mpzMatrix_t *w;
+//  long nrows = A->nrows, ncols = A->ncols;
+//  assert(v->ncols == 1);
+//  assert(v->nrows == nrows);
+//  assert(g->ncols == 1);
+//  assert(g->nrows == nrows);
+//  mpzMatrix_init(nrows, 1);
+//  mpzMatrix_GCD(b, A, s);
+//  mpzMatrix_copyFromMpzColumn(g, A, 0, 0);
+//  mpzMatrix_setEntry_si(v, 0, 0, 1);
+//
+//  for (long i = 1; i < ncols; ++i) {
+//    mpzMatrix_GCD(tmp, g, s);
+//    if (mpz_cmp(tmp, b) == 0) break;
+//    mpzMatrix_copyFromMpzColumn(w, A, i, 0);
+//    mpzMatrix_extractVectorGCD(tmp, g, w, s);
+//    mpzMatrix_addmul_mod(g, tmp, w, s);
+//  }
+//
+//  mpz_clears(tmp, b, NULL);
+//  mpzMatrix_fini(w);
+//}
 
 //void mpzMatrix_extractVectorGCD(mpz_t c, mpzMatrix_t const * v, mpzMatrix_t const * w, mpz_t const s)
 //{
