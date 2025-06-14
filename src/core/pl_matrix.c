@@ -30,13 +30,11 @@ void extractBits(fmpz_t out, const fmpz_t in, long l, long r) {
 
   long numBits = r - l + 1;
   long numLimbs = (numBits + FLINT_BITS - 1)/FLINT_BITS;
-  //fmpz_init2(out, numLimbs);
   int bitsWritten = 0;
   int outIdx = 0;
   int outOffset = 0;
   mpz_t outMpz;
   mpz_init2(outMpz, numBits);
-  // TODO: Test negatives.
   SIZ(outMpz) = numLimbs * fmpz_sgn(in);
   mp_limb_t *inLimbs = PTR(COEFF_TO_PTR(*in)), *outLimbs = PTR(outMpz);
   for (int i = 0; i < ALLOC(outMpz); ++i) { outLimbs[i] = 0; }
@@ -254,12 +252,11 @@ void cmodMulviaColPL(fmpz_mat_t dst, fmpz_mat_t const A, fmpz_mat_t const B, fmp
   gettimeofday(&start,0);
   long X = max(calculateBase(B), calculateBase(A));
   printf("Base chose to be %d\n", X);
-  if (X == 0) { return; }
+  if (X == 0) { fmpz_mat_zero(dst); return; }
   printf("Starting to init Apl\n");
   plMatrix_t *Apl = colPLMatrix_initFromFmpzMatrix(A, X);
 
-  plMatrix_print(stdout, Apl);
-  if (Apl->eparams[Apl->origCols] == 0) return;
+  if (Apl->eparams[Apl->origCols] == 0) { fmpz_mat_zero(dst); return; }
   gettimeofday(&end,0);
   printf("Apl %.3f\n", (double)(end.tv_sec - start.tv_sec + (end.tv_usec - start.tv_usec)*1e-6));
   printf("Dimension of Apl %d \n", Apl->eparams[Apl->origCols]);
@@ -330,11 +327,11 @@ void cmodMulviaColPL(fmpz_mat_t dst, fmpz_mat_t const A, fmpz_mat_t const B, fmp
 void cmodMulviaPL(fmpz_mat_t dst, fmpz_mat_t const A, fmpz_mat_t const B, fmpz_mat_struct const *F) {
   fmpz_mat_zero(dst);
   long X = max(calculateBase(B), calculateBase(A));
-  if (X == 0) { return; }
+  if (X == 0) { fmpz_mat_zero(dst); return; }
   plMatrix_t *Apl = rowPLMatrix_initFromFmpzMatrix(A, X);
-  if (Apl->eparams[Apl->origRows] == 0) return;
+  if (Apl->eparams[Apl->origRows] == 0) { fmpz_mat_zero(dst); return; }
   plMatrix_t *Bpl = colPLMatrix_initFromFmpzMatrix(B, X);
-  if (Bpl->eparams[Bpl->origCols] == 0) return;
+  if (Bpl->eparams[Bpl->origCols] == 0) { fmpz_mat_zero(dst); return; }
 
   fmpz_mat_t Cl;
   fmpz_mat_init(Cl, Apl->eparams[Apl->origRows], Bpl->eparams[Bpl->origCols]);
