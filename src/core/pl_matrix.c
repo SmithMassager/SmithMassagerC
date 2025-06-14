@@ -104,7 +104,8 @@ long calculateBase(fmpz_mat_t const src) {
     ans += exp;
   }
   fmpz_clear(mx);
-  return ans/fmpz_mat_ncols(src);
+  long base = ans/fmpz_mat_ncols(src);
+  return (base == 0 ? 1 : base);
 }
 
 plMatrix_t * colPLMatrix_initFromFmpzMatrix(fmpz_mat_t const src, long X) {
