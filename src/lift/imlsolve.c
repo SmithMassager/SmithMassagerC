@@ -6,8 +6,6 @@
 
 void imlSolve(mpzMatrix_t * x, mpz_t d, mpzMatrix_t const * A, mpzMatrix_t const * b)
 {
-  printf("calling nonsingSolv\n");
-  fflush(stdout);
   nonsingSolvLlhsMM(RightSolu, b->nrows, b->ncols, A->data, b->data, x->data, d);
 }
 

@@ -2,6 +2,7 @@ macro(DefineExternal=ExternalCalling:-DefineExternal);
 
 uniCertHelper := DefineExternal("unicert_maple", "lib/libhnfproj.so");
 imlSolveHelper := DefineExternal("imlSolve_maple", "lib/libhnfproj.so");
+dixonSolveHelper := DefineExternal("dixonSolve_maple", "lib/libhnfproj.so");
 highOrderResidue := DefineExternal("highOrderResidue_maple", "lib/libhnfproj.so");
 imlMult := DefineExternal("imlMultiply_maple", "lib/libhnfproj.so");
 add_maple := DefineExternal("add_maple", "lib/libhnfproj.so");
