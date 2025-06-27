@@ -581,39 +581,39 @@ ALGEB M_DECL fastIntCert_maple(MKernelVector kv, ALGEB args)
   // Calculate A^(-1)sRB and store it into Res 
   //if (false) {
   if (mpz_cmp(s, tmp) <= 0) {
-    //printf("calling reconstruct\n");
-    fmpz_t thressqrt;
+    ////printf("calling reconstruct\n");
+    //fmpz_t thressqrt;
 
-    fmpz_init(thressqrt);
-    fmpz_set_mpz(thressqrt, thres);
-    //fmpz_sqrt(thressqrt, thressqrt);
-    //fmpz_add_si(thressqrt, thressqrt, 1);
-    //printf("calling fmpz_mat_solve\n");
-    fmpz_mat_solve_fmpz_mat_multi_mod_bound(Resf, Af, sBRf, thressqrt);
-    //printf("converting Q \n");
-    //fmpq_mat_get_fmpz_mat_matwise(Resf, denf, Q);
-    //printf("finished converting Q \n");
-    //fmpz_mat_scalar_mul_fmpz(Resf, Resf, denf);
-    //printf("converting to mpzMat\n");
-    Res = fmpzMat_toMpzMat(Resf);
+    //fmpz_init(thressqrt);
+    //fmpz_set_mpz(thressqrt, thres);
+    ////fmpz_sqrt(thressqrt, thressqrt);
+    ////fmpz_add_si(thressqrt, thressqrt, 1);
+    ////printf("calling fmpz_mat_solve\n");
+    //fmpz_mat_solve_fmpz_mat_multi_mod_bound(Resf, Af, sBRf, thressqrt);
+    ////printf("converting Q \n");
+    ////fmpq_mat_get_fmpz_mat_matwise(Resf, denf, Q);
+    ////printf("finished converting Q \n");
+    ////fmpz_mat_scalar_mul_fmpz(Resf, Resf, denf);
+    ////printf("converting to mpzMat\n");
+    //Res = fmpzMat_toMpzMat(Resf);
 
-    //printf("clearing fmp\n");
-    fmpz_clear(thressqrt);
-    //printf("finished clearing fmp\n");
+    ////printf("clearing fmp\n");
+    //fmpz_clear(thressqrt);
+    ////printf("finished clearing fmp\n");
 
-    //primes = genCoPrimes(pickStartModulus(n), thres, &nprimes, s);
-    //P = basis_init(primes, nprimes);
-    //Ap = rnsMatrix_init(n, n, P);
-    //Bp = rnsMatrix_init(B->nrows, B->ncols, P);
-    //Cp = rnsMatrix_init(B->nrows, B->ncols, P);
-    //rnsMatrix_fromMpzMatrix(Ap, A);
-    //rnsMatrix_fromMpzMatrix(Bp, sBR);
-    //rnsMatrix_inverse(Ap);
-    //rnsMatrix_gemm(Cp, Ap, Bp);
-    ////rnsMatrix_print(Ap);
-    ////rnsMatrix_print(Bp);
-    ////rnsMatrix_print(Cp);
-    //mpzMatrix_reconstruct(Res, Cp);
+    primes = genCoPrimes(pickStartModulus(n), thres, &nprimes, s);
+    P = basis_init(primes, nprimes);
+    Ap = rnsMatrix_init(n, n, P);
+    Bp = rnsMatrix_init(B->nrows, B->ncols, P);
+    Cp = rnsMatrix_init(B->nrows, B->ncols, P);
+    rnsMatrix_fromMpzMatrix(Ap, A);
+    rnsMatrix_fromMpzMatrix(Bp, sBR);
+    rnsMatrix_inverse(Ap);
+    rnsMatrix_gemm(Cp, Ap, Bp);
+    //rnsMatrix_print(Ap);
+    //rnsMatrix_print(Bp);
+    //rnsMatrix_print(Cp);
+    mpzMatrix_reconstruct(Res, Cp);
     //mpzMatrix_print(stdout, Res);
 
     // Check the answer A^(-1)sRB is integral iff ||rem(A^(-1)sRB, thres)||  < 0.6*s*n*||B||
@@ -634,8 +634,8 @@ ALGEB M_DECL fastIntCert_maple(MKernelVector kv, ALGEB args)
     rnsMatrix_fini(Ap);
     rnsMatrix_fini(Bp);
     rnsMatrix_fini(Cp);
-    //basis_fini(P);
-    //free(primes);
+    basis_fini(P);
+    free(primes);
   } else {
     //printf("calling imlSolve\n");
     fmpz_mat_solve_dixon_den(Resf, denf, Af, sBRf);
