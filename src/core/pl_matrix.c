@@ -61,6 +61,12 @@ void extractBits(fmpz_t out, const fmpz_t in, long l, long r) {
       outOffset = 0;
     }
   }
+  int unusedLimbs = 0;
+  for (int i = numLimbs-1; i >= 0; --i) {
+    if (outLimbs[i] != 0) { break; }
+    ++unusedLimbs;
+  }
+  SIZ(outMpz) = (ABS(SIZ(outMpz)) - unusedLimbs) * fmpz_sgn(in);
   fmpz_set_mpz(out, outMpz);
   mpz_clear(outMpz);
 }
