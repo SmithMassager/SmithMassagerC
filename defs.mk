@@ -28,10 +28,33 @@ export SRCDIR := $(BASEDIR)src/
 export LIFTLIB := $(BASEDIR)lib/libhnfproj.a
 export SHAREDLIB := $(BASEDIR)lib/libhnfproj.so
 
+UNAME_S := $(shell uname -s)
+UNAME_M := $(shell uname -m)
 
-CFLAGS += -I$(MAPLEDIR)/extern/include/ -Wl,-rpath,$(MAPLEDIR)/bin.APPLE_ARM64_MACOS/ -Wl,-undefined,dynamic_lookup
+ifeq ($(UNAME_S),Linux)
+  OS := LINUX
+  ifeq ($(UNAME_M),x86_64)
+    ARCH := X86_64
+  else ifeq ($(UNAME_M),arm64)
+    ARCH := UNIVERSAL_OSX
+	endif
+  MAPLEBIN := $(MAPLEDIR)/bin.$(ARCH)_$(OS)/
+else ifeq ($(UNAME_S),Darwin)
+  OS := APPLE
+  ifeq ($(UNAME_M),x86_64)
+    ARCH := X86_64_MACOS
+  else ifeq ($(UNAME_M),arm64)
+    ARCH := UNIVERSAL_OSX
+	endif
+  MAPLEBIN := $(MAPLEDIR)/bin.$(OS)_$(ARCH)/
+else
+    OS := unknown
+    ARCH := unkonwn
+endif
 
-LDFLAGS += -L$(MAPLEDIR)/lib/ -L$(MAPLEDIR)/bin.APPLE_ARM64_MACOS/
+CFLAGS += -I$(MAPLEDIR)/extern/include/ -Wl,-rpath,$(MAPLEBIN) -Wl,-undefined,dynamic_lookup
+
+LDFLAGS += -L$(MAPLEDIR)/lib/ -L$(MAPLEBIN)
 
 ifdef OPENBLAS_LIB_DIR
   LDFLAGS += -L$(OPENBLAS_LIB_DIR) -L$(HOME)/lib/

@@ -36,14 +36,14 @@ ifeq ($(UNAME_S),Linux)
     ARCH := X86_64
   else ifeq ($(UNAME_M),arm64)
     ARCH := UNIVERSAL_OSX
-  MAPLELIB := $(MAPLEDIR)/bin.$(ARCH)_$(OS)/
+  MAPLEBIN := $(MAPLEDIR)/bin.$(ARCH)_$(OS)/
 else ifeq ($(UNAME_S),Darwin)
   OS := APPLE
   ifeq ($(UNAME_M),x86_64)
     ARCH := X86_64_MACOS
   else ifeq ($(UNAME_M),arm64)
     ARCH := UNIVERSAL_OSX
-  MAPLELIB := $(MAPLEDIR)/bin.$(OS)_$(ARCH)/
+  MAPLEBIN := $(MAPLEDIR)/bin.$(OS)_$(ARCH)/
 else
     OS := unknown
     ARCH := unkonwn
