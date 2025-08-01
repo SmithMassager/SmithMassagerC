@@ -1,13 +1,17 @@
 .PHONY: core lift maple spinv iherm clean
 
-CFLAGS += -I$(SRCDIR)iml-1.0.3/src/ -I$(SRCDIR)/include/
+CFLAGS += -I$(SRCDIR)iml-1.0.3/src/ -I$(SRCDIR)/include/ -I$(SRCDIR)/lift/ -I$(SRCDIR)/core/ -I$(SRCDIR)/spinv/
 
-lib: $(LIFTLIB)
+lib: $(SHAREDLIB) $(STATIC) $(SMITH)
 
 shared: $(SHAREDLIB)
 static: $(STATIC)
+smith: $(SMITH)
 
-$(LIFTLIB): $(OBJDIR)*.o
+$(SMITH): $(OBJDIR)*.o
+	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(LDLIBS) -o $@
+
+$(STATIC): $(OBJDIR)*.o
 	$(AR) -r -c -s $@ $^
 
 $(SHAREDLIB): $(OBJDIR)*.o

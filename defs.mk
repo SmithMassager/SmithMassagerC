@@ -1,7 +1,7 @@
 export BASEDIR := $(dir $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
 
 export CC := gcc
-export LDLIBS  := -lopenblas -lgmp -lm -lmaplec -lflint
+export LDLIBS := -lopenblas -lgmp -lm -lmaplec -lflint
 export prefix := /Users/ziwenwang/repo/flint-nix-builds/
 export OPENBLAS := $(prefix)/openblas/
 export OPENBLAS_LIB_DIR := $(OPENBLAS)/lib/
@@ -22,11 +22,12 @@ export MAPLEDIR := /Library/Frameworks/Maple.framework/Versions/2025/
 export LDFLAGS := #empty
 export CFLAGS  := #empty
 
-export OBJDIR := $(BASEDIR)objs/
-export SRCDIR := $(BASEDIR)src/
+export OBJDIR := $(BASEDIR)/objs/
+export SRCDIR := $(BASEDIR)/src/
 
-export LIFTLIB := $(BASEDIR)lib/libhnfproj.a
-export SHAREDLIB := $(BASEDIR)lib/libhnfproj.so
+export STATICLIB := $(BASEDIR)/lib/libhnfproj.a
+export SHAREDLIB := $(BASEDIR)/lib/libhnfproj.so
+export SMITH := $(BASEDIR)/bin/smith-massager
 
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
@@ -37,7 +38,7 @@ ifeq ($(UNAME_S),Linux)
     ARCH := X86_64
   else ifeq ($(UNAME_M),arm64)
     ARCH := ARM64
-	endif
+  endif
   MAPLEBIN := $(MAPLEDIR)/bin.$(ARCH)_$(OS)/
 else ifeq ($(UNAME_S),Darwin)
   OS := APPLE
@@ -45,7 +46,7 @@ else ifeq ($(UNAME_S),Darwin)
     ARCH := UNIVERSAL_OSX
   else ifeq ($(UNAME_M),arm64)
     ARCH := ARM64_MACOS
-	endif
+  endif
   MAPLEBIN := $(MAPLEDIR)/bin.$(OS)_$(ARCH)/
 else
     OS := unknown
@@ -57,7 +58,7 @@ CFLAGS += -I$(MAPLEDIR)/extern/include/ -Wl,-rpath,$(MAPLEBIN) -Wl,-undefined,dy
 LDFLAGS += -L$(MAPLEDIR)/lib/ -L$(MAPLEBIN)
 
 ifdef OPENBLAS_LIB_DIR
-  LDFLAGS += -L$(OPENBLAS_LIB_DIR) -L$(HOME)/lib/
+  LDFLAGS += -L$(OPENBLAS_LIB_DIR)
 endif
 ifdef OPENBLAS_INCLUDE_DIR
   CFLAGS += -I$(OPENBLAS_INCLUDE_DIR)
