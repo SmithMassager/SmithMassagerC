@@ -34,8 +34,10 @@ examples: lib shared
 
 clean:
 	$(MAKE) $(MAKEOPTS) --directory=src clean
-	rm -f objs/* lib/* bin/*; true;
+	rm -rf objs lib bin $(INSTALL_DIR)
 install:
-	#mkdir $(INSTALL_DIR)
+	mkdir -p $(INSTALL_DIR)
 	cp -r lib/ $(INSTALL_DIR)
-
+	mkdir -p $(INSTALL_DIR)/include
+	find ./src -type f -name "*.h" -exec cp {} ./$(INSTALL_DIR)/include \;
+	cp -r bin/ $(INSTALL_DIR)

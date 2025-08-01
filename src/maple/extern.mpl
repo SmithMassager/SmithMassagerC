@@ -7,7 +7,11 @@ highOrderResidue := DefineExternal("highOrderResidue_maple", "lib/libhnfproj.so"
 imlMult := DefineExternal("imlMultiply_maple", "lib/libhnfproj.so");
 add_maple := DefineExternal("add_maple", "lib/libhnfproj.so");
 fastIntCertC := DefineExternal("fastIntCert_maple", "lib/libhnfproj.so");
+specialIntCertC := DefineExternal("specialIntCert_maple", "lib/libhnfproj.so");
 iherm := DefineExternal("iherm_maple", "lib/libhnfproj.so");
+indexMassagerC := DefineExternal("indexMassager_maple", "lib/libhnfproj.so");
+largestInvariantFactorC := DefineExternal("largestInvariantFactor_maple", "lib/libhnfproj.so");
+smithMassagerC := DefineExternal("smithMassager_maple", "lib/libhnfproj.so");
 
 # cmodMulPL, cmodMulColPL
 ## A, args[1] reprsenting a matrix with appropiate size.
@@ -21,3 +25,4 @@ cmodMulColPL := DefineExternal("cmodMulviaColPL_maple", "lib/libhnfproj.so");
 ## B, args[2]
 ## Return A.B
 fmpzMult := DefineExternal("fmpzMult_maple", "lib/libhnfproj.so");
+SNF_C:= DefineExternal("computeProjBasis_maple", "lib/libhnfproj.so");

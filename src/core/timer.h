@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <time.h>
+#include <sys/time.h>
 
 /** \file timer.h
  * \brief Timing convenience macros.
@@ -43,14 +44,23 @@ extern FILE * g_timer_stream;
 
 #define REAL_TIMER(lbl, stmt) \
 { \
-  static time_t start_real, end_real; \
-  static long diff_real; \
-  time(&start_real); \
-  stmt; \
-  time(&end_real); \
-  diff_real = (long)difftime(end_real, start_real); \
-  printf("%16s: %ld seconds (real time)\n", lbl, diff_real); \
+struct timeval start_real, end_real; \
+double diff_real; \
+gettimeofday(&start_real, NULL); \
+stmt; \
+gettimeofday(&end_real, NULL); \
+diff_real = (end_real.tv_sec - start_real.tv_sec) + (end_real.tv_usec - start_real.tv_usec) / 1000000.0; \
+printf("%s: %.5f seconds (real time)\n", lbl, diff_real);\
 }
+
+//diff_real = (end_real.tv_sec - start_real.tv_sec) + (end_real.tv_usec - start_real.tv_usec) / 1000000.0; \
+//  static time_t start_real, end_real; \
+//  static long diff_real; \
+//  time(&start_real); \
+//  stmt; \
+//  time(&end_real); \
+//  diff_real = (long)difftime(end_real, start_real); \
+//  printf("%16s: %ld seconds (real time)\n", lbl, diff_real); \
 
 #define TIMER_ACC_INIT(lbl) \
 unsigned long long t##lbl = 0

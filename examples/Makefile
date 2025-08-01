@@ -11,16 +11,16 @@ CFLAGS += -I$(SRCDIR)include
 #all: $(UNICERT_EXE) $(IHERM_EXE) $(SIMPLE_IHERM_EXE) $(HOR_EXE)
 all: $(UNICERT_EXE) $(HOR_EXE)
 
-$(UNICERT_EXE): unicert_main.c $(LIFTLIB)
+$(UNICERT_EXE): unicert_main.c $(LIFTLIB) $(SHAREDLIB)
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(LDLIBS) -I$(SRCDIR)core -I$(SRCDIR)spinv -o $@
 
-$(HOR_EXE): hor_main.c $(LIFTLIB)
+$(HOR_EXE): hor_main.c $(LIFTLIB) $(SHAREDLIB)
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(LDLIBS) -I$(SRCDIR)core -I$(SRCDIR)spinv -I$(SRCDIR)lift -o $@
 
 $(SIMPLE_IHERM_EXE): iherm_simple.c $(SHAREDLIB)
 	$(CC) $< $(CFLAGS) $(LDFLAGS) -L$(BASEDIR)lib -lhnfproj $(LDLIBS) -o $@
 
-$(IHERM_EXE): iherm_main.c $(LIFTLIB)
+$(IHERM_EXE): iherm_main.c $(LIFTLIB) $(SHAREDLIB)
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(LDLIBS) -I$(SRCDIR)core -I$(SRCDIR)linsys -I$(SRCDIR)spinv -I$(SRCDIR)iherm -o $@
 
 clean:
