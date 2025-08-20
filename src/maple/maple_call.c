@@ -23,6 +23,14 @@
 #include "pl_matrix.h"
 #include "rns_conversion.h"
 #include "reconstruct.h"
+#include "fastIntCert.h"
+#include "fmpz_conv.h"
+#include "specialIntCert.h"
+#include "indexMassager.h"
+#include "largestInvariantFactor.h"
+#include "smithMassager.h"
+
+#define min(x, y) ((x < y) ? x : y)
 
 /*static void whattype( MKernelVector kv, ALGEB s )
 {
@@ -53,10 +61,9 @@
 }*/
 
 void mapleToFmpzInteger(MKernelVector kv, fmpz_t dst, ALGEB val) {
-  mpz_ptr tmp;
+  mpz_ptr tmp; // Tmp should not be freed, since it is managed by MKernelVector
   tmp = MapleToGMPInteger(kv, val);
   fmpz_set_mpz(dst, tmp);
-  mpz_clear(tmp);
 }
 
 ALGEB FMPZIntegerToMaple(MKernelVector kv, fmpz_t val) {
@@ -71,7 +78,7 @@ ALGEB FMPZIntegerToMaple(MKernelVector kv, fmpz_t val) {
   return ret;
 }
 
-static mpzMatrix_t * mpzMatrix_fromRTable( MKernelVector kv, ALGEB rt )
+static mpzMatrix_t *mpzMatrix_fromRTable( MKernelVector kv, ALGEB rt )
 {
   long src_idx, dst_idx = 0, nrows, ncols;
   mpzMatrix_t * A;
@@ -143,46 +150,20 @@ static ALGEB mpzMatrix_toRTable( MKernelVector kv, mpzMatrix_t const * A )
   return rt;
 }
 
-static void fmpzMat_fromMpzMat(fmpz_mat_t Af, mpzMatrix_t *A) {
-  for (long i = 0; i < A->nrows; ++i) {
-    for (long j = 0; j < A->ncols; ++j) {
-      fmpz_set_mpz(fmpz_mat_entry(Af, i, j), mmget(A, i, j));
-    }
-  }
-}
-
 static void fmpzMat_fromRTable(fmpz_mat_t Af, MKernelVector kv, ALGEB rt) {
   mpzMatrix_t *A;
   A = mpzMatrix_fromRTable(kv, rt);
   fmpz_mat_init(Af, A->nrows, A->ncols);
   struct timeval start, end;
-  //gettimeofday(&start, 0);
   fmpzMat_fromMpzMat(Af, A);
-  //gettimeofday(&end, 0);
-  //printf("Time to convert from mpzMatrix to fmpzMatrix %.3f\n", (double)(end.tv_sec - start.tv_sec + (end.tv_usec - start.tv_usec)*1e-6));
   mpzMatrix_fini(A);
-}
-
-static mpzMatrix_t* fmpzMat_toMpzMat(fmpz_mat_t Af) {
-  mpzMatrix_t *A;
-  A = mpzMatrix_init(fmpz_mat_nrows(Af), fmpz_mat_ncols(Af));
-  for (long i = 0; i < A->nrows; ++i) {
-    for (long j = 0; j < A->ncols; ++j) {
-      fmpz_get_mpz(mmget(A, i, j), fmpz_mat_entry(Af, i, j));
-    }
-  }
-  return A;
 }
 
 static ALGEB fmpzMat_toRTable(MKernelVector kv, fmpz_mat_t Af) {
   mpzMatrix_t *A;
   ALGEB rt;
   struct timeval start, end;
-  //gettimeofday(&start, 0);
   A = fmpzMat_toMpzMat(Af);
-  //gettimeofday(&end, 0);
-  //printf("Time to convert from fmpzMatrix to mpzMatrix %.3f\n", (double)(end.tv_sec - start.tv_sec + (end.tv_usec - start.tv_usec)*1e-6));
-
   rt =  mpzMatrix_toRTable(kv, A);
   mpzMatrix_fini(A);
   return rt;
@@ -495,16 +476,9 @@ fmpz_mat_solve_fmpz_mat_multi_mod_bound(fmpz_mat_t X,
 ALGEB M_DECL fastIntCert_maple(MKernelVector kv, ALGEB args)
 {
   int argc;
-  mpzMatrix_t *A, *B, *R, *Res, *sBR;
-  rnsMatrix_t *Ap, *Bp, *Cp;
-  basis_t *P;
+  mpzMatrix_t *A, *B, *Res;
   ALGEB A_rt, B_rt, s_m;
-  mpz_ptr s, h;
-  mpz_t thres, BMX, tmp, bound, AMX;
-  fmpz_mat_t Af, sBRf, Resf;
-  fmpz_t tmpf, denf;
-  int nprimes, k;
-  long *primes, n;
+  mpz_ptr s;
 
   argc = MapleNumArgs(kv,args);
   if (argc != 3 
@@ -523,151 +497,22 @@ ALGEB M_DECL fastIntCert_maple(MKernelVector kv, ALGEB args)
 
   A = mpzMatrix_fromRTable(kv, A_rt);
   B = mpzMatrix_fromRTable(kv, B_rt);
-  Res = mpzMatrix_init(B->nrows, B->ncols);
-  sBR = mpzMatrix_init(B->nrows, B->ncols);
   s = MapleToGMPInteger(kv, s_m);
-  n = A->nrows;
-  mpz_init_set_ui(thres, 1);
-  mpz_init(BMX);
-  mpz_init(AMX);
-  mpz_init_set_ui(bound, 1);
-  mpz_init(tmp);
-  fmpz_init(tmpf);
-  fmpz_init(denf);
+  Res = mpzMatrix_init(B->nrows, B->ncols);
 
-  if (!A || !B) { return NULL; }
+  int success = fastIntCert(s, Res, A, B, A->nrows, B->ncols);
 
-  // Claculate thres >= 1.2 * s * n^2 * ||A|| * ||B||
-  mpz_mul(thres, thres, s);
-  mpzMatrix_max(AMX, A);
-  mpz_mul(thres, thres, AMX);
-  mpzMatrix_max(BMX, B);
-  mpz_mul(thres, thres, BMX);
-  mpz_mul_ui(thres, thres, 12);
-  mpz_mul_ui(thres, thres, n);
-  mpz_mul_ui(thres, thres, n);
-  mpz_cdiv_q_ui(thres, thres, 10);
-
-  //R = highOrderResidue(A);
-  mpzMatrix_t * rslt;
-  lift_info_t * info;
-  // Bound = 2 s n^(n/2) ||A||^(n-1) ||B||
-  mpz_pow_ui(tmp, AMX, n-1);
-  mpz_ui_pow_ui(bound, n, n/2+1);
-  mpz_mul(bound, bound, BMX);
-  mpz_mul_ui(bound, bound, 2);
-  mpz_mul(bound, bound, s);
-  mpz_mul(bound, bound, tmp);
-  //info = horBaseFromBound(A, NULL, bound);
-  info = horBase(A, NULL);
-  R = mpzMatrix_init(n, n);
-  mpzMatrix_reconstruct(R, liftInfo_R(info));
-  h = liftInfo_modulus(info);
-  k = liftInfo_iter(info);
-
-  // Calculate sRB
-  //mpzMatrix_gemm(Res, R, B);
-  mpzMatrix_rnsGemm(sBR, R, B);
-  mpzMatrix_scale(sBR, s);
-  int returnFalse;
-  mpz_set_ui(tmp, 10); mpz_pow_ui(tmp, tmp, 60);
-
-  fmpz_mat_init(Af, A->nrows, A->ncols);
-  fmpz_mat_init(sBRf, sBR->nrows, sBR->ncols);
-  fmpz_mat_init(Resf, Res->nrows, Res->ncols);
-  fmpzMat_fromMpzMat(Af, A);
-  fmpzMat_fromMpzMat(sBRf, sBR);
-
-  // Calculate A^(-1)sRB and store it into Res 
-  //if (false) {
-  if (mpz_cmp(s, tmp) <= 0) {
-    ////printf("calling reconstruct\n");
-    //fmpz_t thressqrt;
-
-    //fmpz_init(thressqrt);
-    //fmpz_set_mpz(thressqrt, thres);
-    ////fmpz_sqrt(thressqrt, thressqrt);
-    ////fmpz_add_si(thressqrt, thressqrt, 1);
-    ////printf("calling fmpz_mat_solve\n");
-    //fmpz_mat_solve_fmpz_mat_multi_mod_bound(Resf, Af, sBRf, thressqrt);
-    ////printf("converting Q \n");
-    ////fmpq_mat_get_fmpz_mat_matwise(Resf, denf, Q);
-    ////printf("finished converting Q \n");
-    ////fmpz_mat_scalar_mul_fmpz(Resf, Resf, denf);
-    ////printf("converting to mpzMat\n");
-    //Res = fmpzMat_toMpzMat(Resf);
-
-    ////printf("clearing fmp\n");
-    //fmpz_clear(thressqrt);
-    ////printf("finished clearing fmp\n");
-
-    primes = genCoPrimes(pickStartModulus(n), thres, &nprimes, s);
-    P = basis_init(primes, nprimes);
-    Ap = rnsMatrix_init(n, n, P);
-    Bp = rnsMatrix_init(B->nrows, B->ncols, P);
-    Cp = rnsMatrix_init(B->nrows, B->ncols, P);
-    rnsMatrix_fromMpzMatrix(Ap, A);
-    rnsMatrix_fromMpzMatrix(Bp, sBR);
-    rnsMatrix_inverse(Ap);
-    rnsMatrix_gemm(Cp, Ap, Bp);
-    //rnsMatrix_print(Ap);
-    //rnsMatrix_print(Bp);
-    //rnsMatrix_print(Cp);
-    mpzMatrix_reconstruct(Res, Cp);
-    //mpzMatrix_print(stdout, Res);
-
-    // Check the answer A^(-1)sRB is integral iff ||rem(A^(-1)sRB, thres)||  < 0.6*s*n*||B||
-    mpzMatrix_max(tmp, Res);
-    mpz_mul(BMX, BMX, s);
-    mpz_mul_ui(BMX, BMX, 6);
-    mpz_mul_ui(BMX, BMX, n);
-    mpz_cdiv_q_ui(BMX, BMX, 10);
-    returnFalse = (mpz_cmp(tmp, BMX) >= 0);
-    if (!returnFalse)  {
-      // Calculate Res * h^k mod s
-      mpzMatrix_modp(Res, s);
-      mpz_powm_ui(h, h, k, s);
-      mpzMatrix_scale(Res, h);
-      mpzMatrix_modp(Res, s);
-      B_rt = mpzMatrix_toRTable(kv, Res);
-    }
-    rnsMatrix_fini(Ap);
-    rnsMatrix_fini(Bp);
-    rnsMatrix_fini(Cp);
-    basis_fini(P);
-    free(primes);
-  } else {
-    //printf("calling imlSolve\n");
-    fmpz_mat_solve_dixon_den(Resf, denf, Af, sBRf);
-    //fmpz_mat_solve(Resf, denf, Af, sBRf);
-    //fmpz_mat_solve_multi_mod_den(Resf, denf, Af, sBRf);
-    Res = fmpzMat_toMpzMat(Resf);
-    fmpz_get_mpz(tmp, denf);
-    //imlSolve(Res, tmp, A, sBR);
-    returnFalse = (mpz_cmp_ui(tmp, 1) != 0);
-    if (!returnFalse) { mpzMatrix_modp(Res, s); B_rt = mpzMatrix_toRTable(kv, Res); }
+  if (success) {
+    B_rt = mpzMatrix_toRTable(kv, Res);
   }
 
   mpzMatrix_fini(A);
   mpzMatrix_fini(B);
-  mpzMatrix_fini(R);
-  mpzMatrix_fini(Res);
-  mpzMatrix_fini(sBR);
-  mpz_clear(thres);
-  mpz_clear(BMX);
-  mpz_clear(tmp);
   MaplePopGMPAllocators(kv);
-  finiLift(info);
-  fmpz_mat_clear(Af);
-  fmpz_mat_clear(sBRf);
-  fmpz_mat_clear(Resf);
-  fmpz_clear(tmpf);
-  fmpz_clear(denf);
+  mpzMatrix_fini(Res);
 
-  if (returnFalse) return ToMapleBoolean(kv, 0);
+  if (!success) return ToMapleBoolean(kv, 0);
   else return ToMapleExpressionSequence(kv, 1, B_rt);
-  //return ToMapleExpressionSequence(kv, 1, B_rt);
-
 }
 
 ALGEB M_DECL unicert_maple(MKernelVector kv, ALGEB args)
@@ -1111,7 +956,6 @@ ALGEB M_DECL add_maple(MKernelVector kv, ALGEB args)
 
   mpzMatrix_fini(A);
   mpzMatrix_fini(B);
- 
   MaplePopGMPAllocators(kv);
 
   return ToMapleExpressionSequence(kv, 1, C_rt);
@@ -1164,8 +1008,303 @@ ALGEB M_DECL fmpzMult_maple(MKernelVector kv, ALGEB args)
   fmpz_mat_clear(C);
   fmpz_clear(mod);
   fmpz_clear(d);
- 
   MaplePopGMPAllocators(kv);
 
   return ToMapleExpressionSequence(kv, 1, C_rt);
+}
+
+// Assume P is n x (r+k)
+ALGEB M_DECL computeProjBasis_maple(MKernelVector kv, ALGEB args)
+{
+  int argc;
+  ALGEB P_rt, n_rt, r_rt, s_rt, k_rt, S_rt, U_rt, M_rt, T_rt;
+  fmpz_mat_t P, S, U, M, T;
+  int n, r, k;
+  fmpz_t s;
+
+  argc = MapleNumArgs(kv,args);
+  if (argc != 5 || !IsMapleRTable(kv, (ALGEB)args[1])
+                || !IsMapleInteger(kv, (ALGEB)args[2])
+                || !IsMapleInteger(kv, (ALGEB)args[3])
+                || !IsMapleInteger(kv, (ALGEB)args[4])
+                || !IsMapleInteger(kv, (ALGEB)args[5])) {
+    MapleRaiseError(kv, "exactly five arguments expected");
+    return NULL;
+  }
+
+  P_rt = (ALGEB)args[1];
+  n_rt = (ALGEB)args[2];
+  r_rt = (ALGEB)args[3];
+  k_rt = (ALGEB)args[4];
+  s_rt = (ALGEB)args[5];
+  MaplePushGMPAllocators(kv, alloc_func, realloc_func, free_func);
+  printf("initializing all the vars from RTable\n");
+
+  n = MapleToInteger32(kv, n_rt);
+  r = MapleToInteger32(kv, r_rt);
+  k = MapleToInteger32(kv, k_rt);
+  fmpz_init(s);
+  mapleToFmpzInteger(kv, s, s_rt);
+  fmpz_mat_init(P, n, r+k);
+  fmpzMat_fromRTable(P, kv, P_rt);
+  fmpz_mat_init(S, r, 1);
+  fmpz_mat_init(U, min(r, n), n);
+  fmpz_mat_init(M, n, min(r, n));
+  fmpz_mat_init(T, min(r, n), min(r, n));
+  //printf("finish initializing all the vars from RTable\n");
+  
+  //printf("calling computeProjBasis\n");
+  //printf("%d\n", s);
+  //fflush(stdout);
+  int success = computeProjBasis(S, U, M, T, P, n, r, s, k);
+  //printf("finish calling computeProjBasis\n");
+  //fflush(stdout);
+  //fmpz_mat_neg(M, M);
+
+  S_rt = fmpzMat_toRTable(kv, S);
+  U_rt = fmpzMat_toRTable(kv, U);
+  M_rt = fmpzMat_toRTable(kv, M);
+  T_rt = fmpzMat_toRTable(kv, T);
+
+  fmpz_mat_clear(P);
+  fmpz_mat_clear(S);
+  fmpz_mat_clear(U);
+  fmpz_mat_clear(M);
+  fmpz_mat_clear(T);
+  fmpz_clear(s);
+  MaplePopGMPAllocators(kv);
+
+  if (success) {
+    return ToMapleExpressionSequence(kv, 4, S_rt, U_rt, M_rt, T_rt);
+  } else {
+    return ToMapleBoolean(kv, 0);
+  }
+}
+
+ALGEB M_DECL specialIntCert_maple(MKernelVector kv, ALGEB args)
+{
+  int argc;
+  ALGEB s_rt, A_rt, B_rt, n_rt, m_rt, Res_rt, r_rt;
+  fmpz_mat_t A, B, Res;
+  int n, m, r;
+  fmpz_t s;
+
+  //printf("calling specialIntCert\n");
+  argc = MapleNumArgs(kv,args);
+  if (argc != 8 || !IsMapleRTable(kv, (ALGEB)args[1])
+                || !IsMapleRTable(kv, (ALGEB)args[2])
+                || !IsMapleRTable(kv, (ALGEB)args[3])
+                || !IsMapleInteger(kv, (ALGEB)args[4])
+                || !IsMapleInteger(kv, (ALGEB)args[5])
+                || !IsMapleInteger(kv, (ALGEB)args[6])
+                || !IsMapleInteger(kv, (ALGEB)args[7])
+                || !IsMapleInteger(kv, (ALGEB)args[8])) {
+    MapleRaiseError(kv, "exactly six arguments expected");
+    return NULL;
+  }
+
+  s_rt = (ALGEB)args[1];
+  A_rt = (ALGEB)args[2];
+  B_rt = (ALGEB)args[3];
+  n_rt = (ALGEB)args[4];
+  m_rt = (ALGEB)args[5];
+  r_rt = (ALGEB)args[6];
+  MaplePushGMPAllocators(kv, alloc_func, realloc_func, free_func);
+  n = MapleToInteger32(kv, n_rt);
+  m = MapleToInteger32(kv, m_rt);
+  r = MapleToInteger32(kv, r_rt);
+
+  mapleToFmpzInteger(kv, s, s_rt);
+  fmpz_mat_init(A, 2*n, 2*n);
+  fmpzMat_fromRTable(A, kv, A_rt);
+  fmpz_mat_init(B, 2*n, m);
+  fmpzMat_fromRTable(B, kv, B_rt);
+  fmpz_mat_init(Res, 2*n, m);
+  
+  int success = specialIntCert(Res, s, A, B, n, m, r);
+
+  Res_rt = fmpzMat_toRTable(kv, Res);
+
+  fmpz_mat_clear(A);
+  fmpz_mat_clear(B);
+  fmpz_mat_clear(Res);
+  fmpz_clear(s);
+  MaplePopGMPAllocators(kv);
+
+  if (!success) {
+    return ToMapleBoolean(kv, 0);
+  } else {
+    return ToMapleExpressionSequence(kv, 1, Res_rt);
+  }
+}
+
+ALGEB M_DECL indexMassager_maple(MKernelVector kv, ALGEB args)
+{
+  int argc;
+  ALGEB B_rt, n_rt, m_rt, r_rt, eps_rt, Q_rt, U_rt, M_rt, S_rt, T_rt, k_rt, s_rt;
+  fmpz_mat_t B, Q, U, M, S, T;
+  int n, m, r, k;
+  fmpz_t s;
+  double eps;
+
+  //printf("calling specialIntCert\n");
+  argc = MapleNumArgs(kv,args);
+  if (argc != 8 || !IsMapleRTable(kv, (ALGEB)args[1])
+                || !IsMapleInteger(kv, (ALGEB)args[2])
+                || !IsMapleInteger(kv, (ALGEB)args[3])
+                || !IsMapleInteger(kv, (ALGEB)args[4])
+                || !IsMapleInteger(kv, (ALGEB)args[5])
+                //|| !IsMapleFloat64(kv, (ALGEB)args[6])
+                //|| !(IsMapleRTable(kv, (ALGEB)args[7]) || IsMapleBoolean(kv, (ALGEB)args[7]))
+                || !IsMapleInteger(kv, (ALGEB)args[8])) {
+    MapleRaiseError(kv, "exactly eight arguments expected");
+    return NULL;
+  }
+
+  B_rt = (ALGEB)args[1];
+  n_rt = (ALGEB)args[2];
+  m_rt = (ALGEB)args[3];
+  r_rt = (ALGEB)args[4];
+  s_rt = (ALGEB)args[5];
+  eps_rt = (ALGEB)args[6];
+  Q_rt = (ALGEB)args[7];
+  k_rt = (ALGEB)args[8];
+  MaplePushGMPAllocators(kv, alloc_func, realloc_func, free_func);
+  n = MapleToInteger32(kv, n_rt);
+  m = MapleToInteger32(kv, m_rt);
+  r = MapleToInteger32(kv, r_rt);
+  k = MapleToInteger32(kv, k_rt);
+  //eps = MapleToFloat64(kv, eps_rt);
+  eps = 0;
+  int QPresent = 0;
+  if (IsMapleRTable(kv, (ALGEB)args[7])) {
+    QPresent = 1;
+    fmpz_mat_init(Q, n, r+k);
+    fmpzMat_fromRTable(Q, kv, Q_rt);
+  }
+  fmpz_init(s);
+  mapleToFmpzInteger(kv, s, s_rt);
+  fmpz_mat_init(B, 2*n, 2*n);
+  fmpzMat_fromRTable(B, kv, B_rt);
+  fmpz_mat_init(U, r, n);
+  fmpz_mat_init(M, n, r);
+  fmpz_mat_init(T, r, r);
+  fmpz_mat_init(S, r, 1);
+  
+  //printf("Calling indexMassage\n");
+  int success = indexMassager(S, U, M, T, B, n, m, r, s, eps, (QPresent ? Q : NULL), k);
+
+  U_rt = fmpzMat_toRTable(kv, U);
+  M_rt = fmpzMat_toRTable(kv, M);
+  S_rt = fmpzMat_toRTable(kv, S);
+  T_rt = fmpzMat_toRTable(kv, T);
+
+  if (QPresent) { fmpz_mat_clear(Q); }
+  fmpz_mat_clear(B);
+  fmpz_mat_clear(S);
+  fmpz_mat_clear(M);
+  fmpz_mat_clear(U);
+  fmpz_mat_clear(T);
+  fmpz_clear(s);
+  MaplePopGMPAllocators(kv);
+
+  //printf("Returning from indexMassager_maple: %d \n", success);
+  if (!success) {
+    return ToMapleBoolean(kv, 0);
+  } else {
+    return ToMapleExpressionSequence(kv, 4, U_rt, M_rt, T_rt, S_rt);
+  }
+}
+
+ALGEB M_DECL largestInvariantFactor_maple(MKernelVector kv, ALGEB args)
+{
+  int argc, n, startDimension;
+  ALGEB A_rt, n_rt, startDimension_rt, X_rt, s_rt;
+  fmpz_mat_t A, X;
+  fmpz_t s;
+
+  argc = MapleNumArgs(kv,args);
+  if (argc != 3 || !IsMapleRTable(kv, (ALGEB)args[1])
+                || !IsMapleInteger(kv, (ALGEB)args[2])
+                || !IsMapleInteger(kv, (ALGEB)args[3])) {
+    MapleRaiseError(kv, "exactly eight arguments expected");
+    return NULL;
+  }
+
+  A_rt = (ALGEB)args[1];
+  n_rt = (ALGEB)args[2];
+  startDimension_rt = (ALGEB)args[3];
+
+  MaplePushGMPAllocators(kv, alloc_func, realloc_func, free_func);
+  startDimension = MapleToInteger32(kv, startDimension_rt);
+  n = MapleToInteger32(kv, n_rt);
+
+  fmpz_init(s);
+  fmpz_mat_init(A, n, n);
+  fmpzMat_fromRTable(A, kv, A_rt);
+  fmpz_mat_init(X, n, startDimension);
+  
+  int success = largestInvariantFactor(s, X, A, startDimension);
+
+  X_rt = fmpzMat_toRTable(kv, X);
+  s_rt = FMPZIntegerToMaple(kv, s);
+
+  fmpz_mat_clear(A);
+  fmpz_mat_clear(X);
+  fmpz_clear(s);
+  MaplePopGMPAllocators(kv);
+
+  if (!success) {
+    return ToMapleBoolean(kv, 0);
+  } else {
+    return ToMapleExpressionSequence(kv, 2, s_rt, X_rt);
+  }
+}
+
+ALGEB M_DECL smithMassager_maple(MKernelVector kv, ALGEB args)
+{
+  int argc, n;
+  ALGEB A_rt, n_rt, U_rt, M_rt, S_rt, T_rt;
+  fmpz_mat_t A, U, M, S, T;
+
+  argc = MapleNumArgs(kv,args);
+  if (argc != 2 || !IsMapleRTable(kv, (ALGEB)args[1])
+                || !IsMapleInteger(kv, (ALGEB)args[2])) {
+    MapleRaiseError(kv, "exactly eight arguments expected");
+    return NULL;
+  }
+
+  A_rt = (ALGEB)args[1];
+  n_rt = (ALGEB)args[2];
+
+  MaplePushGMPAllocators(kv, alloc_func, realloc_func, free_func);
+  n = MapleToInteger32(kv, n_rt);
+
+  fmpz_mat_init(A, n, n);
+  fmpzMat_fromRTable(A, kv, A_rt);
+  fmpz_mat_init(U, n, n);
+  fmpz_mat_init(M, n, n);
+  fmpz_mat_init(T, n, n);
+  fmpz_mat_init(S, n, 1);
+  
+  printf("calling smithMassager\n");
+  int success = smithMassager(U, M, T, S, A);
+
+  U_rt = fmpzMat_toRTable(kv, U);
+  M_rt = fmpzMat_toRTable(kv, M);
+  T_rt = fmpzMat_toRTable(kv, T);
+  S_rt = fmpzMat_toRTable(kv, S);
+
+  fmpz_mat_clear(A);
+  fmpz_mat_clear(U);
+  fmpz_mat_clear(M);
+  fmpz_mat_clear(S);
+  fmpz_mat_clear(T);
+  MaplePopGMPAllocators(kv);
+
+  if (!success) {
+    return ToMapleBoolean(kv, 0);
+  } else {
+    return ToMapleExpressionSequence(kv, 4, U_rt, M_rt, T_rt, S_rt);
+  }
 }

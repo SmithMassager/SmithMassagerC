@@ -17,6 +17,7 @@ struct mpzMatrix_t {
   long nrows;
   long ncols;
 };
+// FIX: change mpzMatrix_t to be mpzMatrix[1] instead.
 typedef struct mpzMatrix_t mpzMatrix_t;
 
 /** Allocate a new `mpzMatrix_t`.
