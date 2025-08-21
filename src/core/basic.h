@@ -22,3 +22,7 @@ void fmpz_mat_setCol(fmpz_mat_t dst, int col, fmpz *vec, int n);
 void fmpz_mat_setRow(fmpz_mat_t dst, int row, fmpz *vec, int n);
 void fmpz_mat_vec_vec_mul(fmpz_mat_t dst, int m, int n, fmpz *u, fmpz *v);
 void fmpz_max(fmpz_t c, fmpz_t a, fmpz_t b);
+
+
+int clz(unsigned int x);
+int bits(unsigned int x);

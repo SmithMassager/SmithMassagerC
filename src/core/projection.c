@@ -3,6 +3,7 @@
 
 #include "basic.h"
 #include "projection.h"
+#include "timer.h"
 
 int computeProjBasis(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t P, int n, int r, fmpz_t s, int k) {
   assert(S->r == r);
@@ -23,7 +24,18 @@ int computeProjBasis(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmp
     fmpz_set_ui(fmpz_mat_entry(T, i, i), 1);
     fmpz_set_ui(fmpz_mat_entry(S, i, 0), 1);
   }
-  int success = SNF(S, U, M, T, P1, E, n, r, s, k, 0, r-1);
+  int success;
+  char lbl_buffer[100];  // Buffer size: make it large enough for your label
+  snprintf(lbl_buffer, sizeof(lbl_buffer), "SNF with size %d, %d %d", r-1, 0, r-1);
+  static struct timeval start_real, end_real;
+  static double diff_real;
+  gettimeofday(&start_real, NULL);
+  success = SNF(S, U, M, T, P1, E, n, r, s, k, 0, r-1);
+  gettimeofday(&end_real, NULL);
+  diff_real = (end_real.tv_sec - start_real.tv_sec) + (end_real.tv_usec - start_real.tv_usec) / 1000000.0;
+  printf("%s: %.5f seconds (real time)\n", lbl_buffer, diff_real);
+
+  //success = SNF(S, U, M, T, P1, E, n, r, s, k, 0, r-1);
   fmpz_mat_neg(M, M);
 
   fmpz_mat_window_clear(P1);
@@ -103,7 +115,20 @@ SNFclear:
     fmpz_mat_clear(muE);
     fmpz_mat_clear(F);
   } else {
+    // TODO: DELETE THIS AFTER
+    char lbl_buffer[100];  // Buffer size: make it large enough for your label
+    snprintf(lbl_buffer, sizeof(lbl_buffer), "SNF with size %d, %d %d", mid-lower, lower, mid);
+    static struct timeval start_real, end_real;
+    static double diff_real;
+    gettimeofday(&start_real, NULL);
     success = SNF(S, U, M, T, P, E, n, r, s, k, lower, mid);
+    gettimeofday(&end_real, NULL);
+    diff_real = (end_real.tv_sec - start_real.tv_sec) + (end_real.tv_usec - start_real.tv_usec) / 1000000.0;
+    printf("%s: %.5f seconds (real time)\n", lbl_buffer, diff_real);
+    // TODO: DELETE THIS AFTER
+
+    //success = SNF(S, U, M, T, P, E, n, r, s, k, lower, mid);
+
     if (!success) goto SNFend;
     fmpz_t divisor;
     fmpz_mod_ctx_t sctx, dctx;
@@ -155,7 +180,20 @@ SNFClearElse:
 SNFend:
   fmpz_clear(tmp);
   if (success && lower != upper) {
-    return SNF(S, U, M, T, P, E, n, r, fmpz_mat_entry(S, l-1-mid, 0), k, mid+1, upper);
+    // TODO: DELETE THIS AFTER
+    char lbl_buffer[100];  // Buffer size: make it large enough for your label
+    snprintf(lbl_buffer, sizeof(lbl_buffer), "SNF with size %d, %d %d", upper-(mid+1), mid+1, upper);
+    static struct timeval start_real, end_real;
+    static double diff_real;
+    gettimeofday(&start_real, NULL);
+    success = SNF(S, U, M, T, P, E, n, r, fmpz_mat_entry(S, l-1-mid, 0), k, mid+1, upper);
+    gettimeofday(&end_real, NULL);
+    diff_real = (end_real.tv_sec - start_real.tv_sec) + (end_real.tv_usec - start_real.tv_usec) / 1000000.0;
+    printf("%s: %.5f seconds (real time)\n", lbl_buffer, diff_real);
+    return success;
+    // TODO: DELETE THIS AFTER
+
+    //return SNF(S, U, M, T, P, E, n, r, fmpz_mat_entry(S, l-1-mid, 0), k, mid+1, upper);
   }
   else return success;
 }

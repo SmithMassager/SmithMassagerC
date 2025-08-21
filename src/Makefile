@@ -4,21 +4,22 @@ CFLAGS += -I$(SRCDIR)iml-1.0.3/src/ -I$(SRCDIR)/include/ -I$(SRCDIR)/lift/ -I$(S
 
 lib: $(LIFTLIB)
 
-shared: $(SHAREDLIB)
+#shared: $(SHAREDLIB)
 static: $(STATIC)
 
 $(LIFTLIB): $(OBJDIR)*.o
-	$(AR) -r -c -s $@ $^
+	  $(CC) $^ $(CFLAGS) $(LDFLAGS) $(LDLIBS) -o a.out
+#$(AR) -r -c -s $@ $^
 
-$(SHAREDLIB): $(OBJDIR)*.o
-	$(CC) $^ $(CFLAGS) $(MAPLEOPTS) -shared $(LDFLAGS) $(LDLIBS) -o $@
+#$(SHAREDLIB): $(OBJDIR)*.o
+#	$(CC) $^ $(CFLAGS) $(MAPLEOPTS) -shared $(LDFLAGS) $(LDLIBS) -o $@
 
 $(OBJDIR)*.o: iml core lift spinv iherm
 #$(OBJDIR)*.o: iml core lift spinv
 
-ifdef MAPLEDIR
-  $(OBJDIR)*.o: maple
-endif
+#ifdef MAPLEDIR
+#  $(OBJDIR)*.o: maple
+#endif
 
 iml:
 	$(MAKE) $(MAKEOPTS) --directory=iml-1.0.3

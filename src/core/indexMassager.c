@@ -5,6 +5,7 @@
 #include "fmpz.h"
 #include "flint.h"
 #include "fmpz_mat.h"
+#include "timer.h"
 
 int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t B, int n, int m, int r, fmpz_t s, int kk, fmpz_mat_t Q) {
   assert(m + r <= n);
@@ -35,7 +36,7 @@ int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_m
     fmpz_mat_zero(J2);
     fmpz_mat_randtest(J1, rand, fmpz_bits(s));
     fmpz_mat_mod(J1, J1, s);
-    success = specialIntCert(P, s, B, J, n, r+k, m);
+    REAL_TIMER("specialIntCert", success = specialIntCert(P, s, B, J, n, r+k, m));
 
     if (!fmpz_mat_equal(P2, J2)) {
       printf("Warning: P2 is non-zero\n");
@@ -57,7 +58,7 @@ int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_m
     fmpz_mat_window_init(P1, Q, 0, 0, Q->r, Q->c);
   }
   
-  success = computeProjBasis(S, U, M, T, P1, n, r, s, k);
+  REAL_TIMER("computeProjBasis", success = computeProjBasis(S, U, M, T, P1, n, r, s, k));
   if (!success) {
     printf("computeProjBasis returned false\n");
   }

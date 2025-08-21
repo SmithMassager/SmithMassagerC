@@ -4,8 +4,11 @@
 #include "fmpz_mat.h"
 #include "fmpz.h"
 #include "flint.h"
+#include "timer.h"
+#include "basic.h"
 
 #define min(a, b) (((a) < (b)) ? (a) : (b))
+#define max(a, b) -min(-a,-b)
 
 int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_mat_t A) {
   assert(A->r == A->c);
@@ -16,7 +19,7 @@ int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_m
 
   i = sumR = r = 0;
   n = A->r;
-  k = startDim = 10;
+  k = startDim = 6;
   success = 1;
 
   fmpz_mat_init(B, 2*n, 2*n);
@@ -33,19 +36,21 @@ int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_m
   fmpz_set_ui(maxU, 0);
   fmpz_mat_cpy(B, 0, 0, n, n, A, 0, 0, n, n);
 
-  largestInvariantFactor(s, Q, A, startDim+k);
-
+  REAL_TIMER("largestInvFactor", largestInvariantFactor(s, Q, A, startDim+k));
+  //largestInvariantFactor(s, Q, A, startDim+k);
   while (sumR < n) {
     fmpz_mat_t Up, Mp, Tp, Sp, SpInv, MpSpInv, Update, TpSpInv, UpMp, NegUpM, Msub, Usub, concat;
     if (i == 0) {
       r = min(startDim, n-sumR);
     } else {
       int sbits = fmpz_bits(s);
-      r = min((oldsbits - sbits)*i, n-sumR);
+      printf("oldsbits, sbits %d %d\n", oldsbits, sbits);
+      r = min(max(bits(oldsbits - sbits)*i, startDim*i), n-sumR);
+      if (sbits < 26) r = n-sumR;
     }
     oldsbits = fmpz_bits(s);
 
-    printf("SmithMassager: iteration %d\n", i);
+    printf("SmithMassager: iteration %d and r %d\n", i, r);
     fmpz_mat_init(Up, r, n);
     fmpz_mat_init(Mp, n, r);
     fmpz_mat_init(Tp, r, r);
@@ -60,7 +65,10 @@ int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_m
     fmpz_mat_window_init(Msub, M, 0, M->c - sumR, M->r, M->c);
     fmpz_mat_window_init(Usub, U, U->c - sumR, 0, U->r, U->c);
 
-    success = indexMassager(Sp, Up, Mp, Tp, B, n, sumR, r, s, k, Q);
+    char lbl_buffer[100];  // Buffer size: make it large enough for your label
+    snprintf(lbl_buffer, sizeof(lbl_buffer), "IndexMassager with size %d %d", sumR, r);
+    REAL_TIMER(lbl_buffer, success = indexMassager(Sp, Up, Mp, Tp, B, n, sumR, r, s, k, Q));
+    //success = indexMassager(Sp, Up, Mp, Tp, B, n, sumR, r, s, k, Q);
 
     if (i == 0) {
       fmpz_mat_clear(Q);
@@ -170,11 +178,27 @@ cleanInner:
     fmpz_mat_cpy(E, 0, n, n, 2*n-l, B, 0, n+l, n, 2*n);
     fmpz_mat_cpy(E, n, n, 2*n-l, 2*n-l, B, n+l, n+l, 2*n, 2*n);
 
+    char lbl[20] = "uniCert";
+    static struct timeval start_real, end_real;
+    static double diff_real;
+    gettimeofday(&start_real, NULL);
     success = fmpz_uniCert(E);
+    gettimeofday(&end_real, NULL);
+    diff_real = (end_real.tv_sec - start_real.tv_sec) + (end_real.tv_usec - start_real.tv_usec) / 1000000.0;
+    printf("%s: %.5f seconds (real time)\n", lbl, diff_real);
+
+    //TIMER_REAL("uniCert:", success = fmpz_uniCert(E));
 
     fmpz_mat_clear(E);
   } else {
+    char lbl[20] = "uniCert";
+    static struct timeval start_real, end_real;
+    static double diff_real;
+    gettimeofday(&start_real, NULL);
     success = fmpz_uniCert(B);
+    gettimeofday(&end_real, NULL);
+    diff_real = (end_real.tv_sec - start_real.tv_sec) + (end_real.tv_usec - start_real.tv_usec) / 1000000.0;
+    printf("%s: %.5f seconds (real time)\n", lbl, diff_real);
   }
 
 cleanOuter:
