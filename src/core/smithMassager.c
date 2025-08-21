@@ -11,14 +11,13 @@ int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_m
   assert(A->r == A->c);
   fmpz_t s, thres, p, maxA, maxU, maxUp, tmp;
   fmpz_mat_t B;
-  fmpz_mat_struct *Q;
+  fmpz_mat_t Q;
   int i, sumR, n, startDim, k, oldsbits, success, r;
 
   i = sumR = r = 0;
   n = A->r;
   k = startDim = 5;
   success = 1;
-  Q = malloc(sizeof(fmpz_mat_struct));
 
   printf("SmithMassager: Initiating variables\n");
   fmpz_mat_init(B, 2*n, 2*n);
@@ -82,14 +81,13 @@ int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_m
 
     printf("SmithMassager: Calling index massager\n");
     printf("Address Q: %p\n", Q);
-    fmpz_mat_print_pretty(Q);
-    success = indexMassager(Sp, Up, Mp, Tp, B, n, sumR, r, s, 0, Q, k);
+    //fmpz_mat_print_pretty(Q);
+    success = indexMassager(Sp, Up, Mp, Tp, B, n, sumR, r, s, k, Q);
     printf("SmithMassager: Finish calling index massager and returned %d \n", success);
 
     if (i == 0) {
       fmpz_mat_clear(Q);
-      free(Q);
-      Q = NULL;
+      fmpz_mat_init(Q, 0, 0);
     }
 
     if (!success) goto cleanInner;
@@ -236,7 +234,7 @@ cleanInner:
 
 cleanOuter:
   fmpz_mat_clear(B);
-  if (Q) { fmpz_mat_clear(Q); free(Q); }
+  fmpz_mat_clear(Q);
   fmpz_clear(s);
   fmpz_clear(thres);
   fmpz_clear(p);

@@ -6,7 +6,7 @@
 #include "flint.h"
 #include "fmpz_mat.h"
 
-int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t B, int n, int m, int r, fmpz_t s, double eps, fmpz_mat_struct *Q, int kk) {
+int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t B, int n, int m, int r, fmpz_t s, int kk, fmpz_mat_t Q) {
   assert(m + r <= n);
   printf("Address Q: %p\n", Q);
   //printf("Starting indexMasager\n");
@@ -30,7 +30,7 @@ int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_m
   fmpz_mat_window_init(P2, P, n, 0, 2*n, r+k);
   printf("Address Q: %p\n", Q);
 
-  if (Q == NULL) {
+  if (Q->r == 0) {
     //printf("Generating random projection\n");
     fmpz_mat_init(J, 2*n, r+k);
     fmpz_mat_window_init(J1, J, 0, 0, n, r+k);

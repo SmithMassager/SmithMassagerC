@@ -27,4 +27,4 @@
 //   With at least 1 - eps probability a maximal index-(m,r) smith massager for
 //   B is returned. i.e. S is compromised of the r largest invariant factors of
 //   B.
-int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t B, int n, int m, int r, fmpz_t s, double eps, fmpz_mat_struct *Q, int kk);
+int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t B, int n, int m, int r, fmpz_t s, int kk, fmpz_mat_t Q);
