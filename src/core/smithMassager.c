@@ -44,6 +44,7 @@ int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_m
     fmpz_mat_t Up, Mp, Tp, Sp, SpInv, MpSpInv, Update, TpSpInv, UpMp, NegUpM, Msub, Usub, concat;
     if (i == 0) {
       r = min(startDim, n-sumR);
+      printf("%p\n", Q);
     } else {
       int sbits = fmpz_bits(s);
       r = min((oldsbits - sbits)*i, n-sumR);
@@ -80,6 +81,8 @@ int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_m
     printf("SmithMassager: Inner Finish Initiating\n");
 
     printf("SmithMassager: Calling index massager\n");
+    printf("Address Q: %p\n", Q);
+    fmpz_mat_print_pretty(Q);
     success = indexMassager(Sp, Up, Mp, Tp, B, n, sumR, r, s, 0, Q, k);
     printf("SmithMassager: Finish calling index massager and returned %d \n", success);
 
