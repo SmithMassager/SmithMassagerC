@@ -32,6 +32,8 @@ void fmpz_mat_mods(fmpz_mat_t A, fmpz_mat_t B, fmpz_t s) {
   assert(A->c == B->c);
   assert(A->r == B->r);
 
+  fmpz_mat_print_pretty(A);
+  fmpz_mat_print_pretty(B);
   for (int i = 0; i < A->r; ++i) {
     for (int j = 0; j < A->c; ++j) {
       fmpz_smod(fmpz_mat_entry(A, i, j), fmpz_mat_entry(B, i, j), s);
@@ -111,26 +113,17 @@ void fmpz_mat_modDiagInv(fmpz_mat_t res, fmpz_t p, fmpz_mat_t src) {
 
 
 void fmpz_mat_modDiagMul(fmpz_mat_t res, fmpz_t p, fmpz_mat_t A, fmpz_mat_t D) {
-  printf("%d %d %d %d %d %d\n", res->r, res->c, A->r, A->c, D->r, D->c);
   assert(res->r == A->r);
   assert(D->r == A->c);
   assert(res->c == D->r);
   assert(1 == D->c);
 
-  printf("Starting for loop\n");
-  fmpz_mat_print_pretty(res);
-  fmpz_mat_print_pretty(A);
-  fmpz_mat_print_pretty(D);
+  //printf("Starting for loop\n");
+  //fmpz_mat_print_pretty(res);
+  //fmpz_mat_print_pretty(A);
+  //fmpz_mat_print_pretty(D);
   for (int i = 0; i < A->r; ++i) {
     for (int j = 0; j < A->c; ++j) {
-      printf("%d %d\n", i, j);
-      printf("Dj\n");
-      fmpz_mat_entry(D, j, 0);
-      printf("Aj\n");
-      fmpz_mat_entry(A, i, j);
-      printf("resj\n");
-      fmpz_mat_entry(res, i, j);
-      printf("fmpz_mul\n");
       fmpz_mul(fmpz_mat_entry(res, i, j), fmpz_mat_entry(A, i, j), fmpz_mat_entry(D, j, 0));
     }
   }

@@ -41,7 +41,7 @@ int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_m
   printf("SmithMassager: Finish calling largestInv\n");
 
   while (sumR < n) {
-    fmpz_mat_t Up, Mp, Tp, Sp, SpInv, MpSpInv, Update, TpSpInv, UpMp, NegUpM, Msub, Usub;
+    fmpz_mat_t Up, Mp, Tp, Sp, SpInv, MpSpInv, Update, TpSpInv, UpMp, NegUpM, Msub, Usub, concat;
     if (i == 0) {
       r = min(startDim, n-sumR);
     } else {
@@ -65,7 +65,8 @@ int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_m
     printf(".5\n");
     fmpz_mat_init(MpSpInv, n, r);
     printf(".6\n");
-    fmpz_mat_init(Update, n+sumR+r, n);
+    fmpz_mat_init(Update, n+sumR+r, r);
+    fmpz_mat_init(concat, n+sumR+r, n);
     printf(".7\n");
     fmpz_mat_init(TpSpInv, r, r);
     printf(".8\n");
@@ -140,9 +141,17 @@ int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_m
     fmpz_mat_modDiagMul(MpSpInv, p, Mp, SpInv);
     printf("SmithMassager: 4\n");
     printf("n, sumR, r: %d %d %d\n", n, sumR, r);
-    fmpz_mat_concat_vertical3(Update, A, Up, Usub);
+    fmpz_mat_concat_vertical3(concat, A, Up, Usub);
+    fmpz_mat_print_pretty(A);
+    fmpz_mat_print_pretty(Up);
+    fmpz_mat_print_pretty(Usub);
+    fmpz_mat_print_pretty(Update);
     printf("SmithMassager: 5\n");
-    fmpz_mat_mul(Update, Update, MpSpInv);
+    fmpz_mat_print_pretty(Update);
+    fmpz_mat_print_pretty(MpSpInv);
+    printf("%ld %ld %ld %ld\n", Update->r, Update->c, MpSpInv->r, MpSpInv->c);
+    fmpz_mat_mul(Update, concat, MpSpInv);
+    fmpz_mat_print_pretty(Update);
     printf("SmithMassager: 6\n");
     fmpz_mat_modDiagMul(TpSpInv, p, Tp, SpInv);
     printf("SmithMassager: 7\n");
@@ -183,6 +192,7 @@ cleanInner:
     fmpz_mat_clear(SpInv);
     fmpz_mat_clear(MpSpInv);
     fmpz_mat_clear(Update);
+    fmpz_mat_clear(concat);
     fmpz_mat_clear(TpSpInv);
     fmpz_mat_window_clear(UpMp);
     fmpz_mat_clear(NegUpM);

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <assert.h>
 
 #include "genHerm.h"
@@ -21,6 +22,7 @@ int power(int a, int b, int p) {
 }
 
 void interestHerm(fmpz_mat_t A) {
+  printf("%ld %ld\n", A->c, A->r);
   assert(A->r == A->c);
 
   fmpz_t p;
@@ -32,7 +34,7 @@ void interestHerm(fmpz_mat_t A) {
   int n = A->r;
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < n; ++j) {
-      fmpz_set(fmpz_mat_entry(A, i, j), power(i, j, n));
+      fmpz_set_si(fmpz_mat_entry(A, i, j), power(i, j, n));
     }
   }
 
