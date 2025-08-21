@@ -79,13 +79,10 @@ void vectorGCD(fmpz *v, fmpz_t s, fmpz *w, unsigned int n) {
   fmpz_init(c);
   fmpz_init(tmp);
 
-  //printf("vectorGCD: Setting vars\n");
   fmpz_mod(g, &w[0], s);
-  //printf("setting &v[i]\n");
   fmpz_set_ui(&v[0], 1);
 
   for (int i = 1; i < n; ++i) {
-    //printf("vectorGCD: In loop\n");
     if (fmpz_equal_ui(&w[i], 0)) continue;
     if (fmpz_equal_ui(g, 1)) break;
     fmpz_stab(c, g, &w[i], s);
@@ -109,7 +106,6 @@ void vectorGCD(fmpz *v, fmpz_t s, fmpz *w, unsigned int n) {
 // Post: c
 //   s.t. gcd(v + cw, s) = gcd(v, w, s).
 void extractGCD(fmpz_t c, fmpz *v, fmpz *w, fmpz_t s, unsigned int n) {
-  //printf("extractGCD: start\n");
   fmpz_t g;
   fmpz m[2];
   fmpz tmp[2];
@@ -123,11 +119,8 @@ void extractGCD(fmpz_t c, fmpz *v, fmpz *w, fmpz_t s, unsigned int n) {
   _fmpz_vec_content(g, w, n);
   fmpz_gcd(&m[0], &v[0], s);
   fmpz_gcd(&m[1], &w[0], s);
-  //printf("n: %d\n", n);
   for (int i = 1; i < n; ++i) {
-    //printf("loop %d\n", i);
     if (fmpz_equal(g, &m[1])) {
-      //printf("breaking\n");
       break;
     }
     fmpz_stab(c, &m[1], &w[i], s);
@@ -144,7 +137,6 @@ void extractGCD(fmpz_t c, fmpz *v, fmpz *w, fmpz_t s, unsigned int n) {
   fmpz_clear(&m[1]);
   fmpz_clear(&tmp[0]);
   fmpz_clear(&tmp[1]);
-  //printf("extractGCD: end\n");
 }
 
 void fmpz_vec_gcd(fmpz_t g, fmpz *v, int n) {
@@ -177,39 +169,18 @@ void extractMatrixGCDHelper(fmpz *v, fmpz *g, fmpz_t s, fmpz_mat_t A) {
   fmpz_init(tmp);
   fmpz_mat_init(AT, m, n);
 
-  //printf("Transpose\n");
   fmpz_mat_transpose(AT, A);
-  //printf("Content\n");
   fmpz_mat_content(b, A);
-  //printf("Get entry\n");
   _fmpz_vec_set(g, fmpz_mat_entry(AT, 0, 0), n);
-  //printf("Set v[0]\n");
   fmpz_set_ui(&v[0], 1);
 
-  //printf("Starting loop\n");
-  //printf("m: %d\n", m);
   for (int i = 1; i < m; ++i){
-    //printf("extractMatrixGCD: loop in %d\n", i);
     fmpz_vec_gcd(tmp, g, n);
-    //_fmpz_vec_print(g, n);
-    //printf("tmp: ");
-    //fmpz_print(tmp);
-    //printf("\n");
     if (fmpz_equal(tmp, b)) break;
-    //printf("Getting w\n");
     w = fmpz_mat_entry(AT, i, 0);
-    //fmpz_mat_print_pretty(AT);
-    //printf("w is: ");
-    //_fmpz_vec_print(w, n);
-    //printf("\n");
     extractGCD(ci, g, w, s, n);
-    //printf("ci is: ");
-    //fflush(stdout);
-    //fmpz_print(ci);
-    //printf("\n");
     _fmpz_vec_scalar_addmul_fmpz(g, w, n, ci);
     _fmpz_vec_scalar_mod_fmpz(g, g, n, s);
-    //_fmpz_vec_print(g, n);
     fmpz_set(&v[i], ci);
   }
 

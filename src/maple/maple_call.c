@@ -1175,12 +1175,11 @@ ALGEB M_DECL indexMassager_maple(MKernelVector kv, ALGEB args)
   r = MapleToInteger32(kv, r_rt);
   k = MapleToInteger32(kv, k_rt);
   //eps = MapleToFloat64(kv, eps_rt);
-  eps = 0;
-  int QPresent = 0;
   if (IsMapleRTable(kv, (ALGEB)args[7])) {
-    QPresent = 1;
     fmpz_mat_init(Q, n, r+k);
     fmpzMat_fromRTable(Q, kv, Q_rt);
+  } else {
+    fmpz_mat_init(Q, 0, 0);
   }
   fmpz_init(s);
   mapleToFmpzInteger(kv, s, s_rt);
@@ -1192,14 +1191,14 @@ ALGEB M_DECL indexMassager_maple(MKernelVector kv, ALGEB args)
   fmpz_mat_init(S, r, 1);
   
   //printf("Calling indexMassage\n");
-  int success = indexMassager(S, U, M, T, B, n, m, r, s, eps, (QPresent ? Q : NULL), k);
+  int success = indexMassager(S, U, M, T, B, n, m, r, s, k, Q);
 
   U_rt = fmpzMat_toRTable(kv, U);
   M_rt = fmpzMat_toRTable(kv, M);
   S_rt = fmpzMat_toRTable(kv, S);
   T_rt = fmpzMat_toRTable(kv, T);
 
-  if (QPresent) { fmpz_mat_clear(Q); }
+  fmpz_mat_clear(Q);
   fmpz_mat_clear(B);
   fmpz_mat_clear(S);
   fmpz_mat_clear(M);
