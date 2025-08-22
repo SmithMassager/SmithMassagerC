@@ -27,8 +27,8 @@ int computeProjBasis(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmp
   int success;
   char lbl_buffer[100];  // Buffer size: make it large enough for your label
   snprintf(lbl_buffer, sizeof(lbl_buffer), "SNF with size %d, %d %d", r-1, 0, r-1);
-  static struct timeval start_real, end_real;
-  static double diff_real;
+  struct timeval start_real, end_real;
+  double diff_real;
   gettimeofday(&start_real, NULL);
   success = SNF(S, U, M, T, P1, E, n, r, s, k, 0, r-1);
   gettimeofday(&end_real, NULL);
@@ -118,8 +118,8 @@ SNFclear:
     // TODO: DELETE THIS AFTER
     char lbl_buffer[100];  // Buffer size: make it large enough for your label
     snprintf(lbl_buffer, sizeof(lbl_buffer), "SNF with size %d, %d %d", mid-lower, lower, mid);
-    static struct timeval start_real, end_real;
-    static double diff_real;
+    struct timeval start_real, end_real;
+    double diff_real;
     gettimeofday(&start_real, NULL);
     success = SNF(S, U, M, T, P, E, n, r, s, k, lower, mid);
     gettimeofday(&end_real, NULL);
@@ -183,8 +183,8 @@ SNFend:
     // TODO: DELETE THIS AFTER
     char lbl_buffer[100];  // Buffer size: make it large enough for your label
     snprintf(lbl_buffer, sizeof(lbl_buffer), "SNF with size %d, %d %d", upper-(mid+1), mid+1, upper);
-    static struct timeval start_real, end_real;
-    static double diff_real;
+    struct timeval start_real, end_real;
+    double diff_real;
     gettimeofday(&start_real, NULL);
     success = SNF(S, U, M, T, P, E, n, r, fmpz_mat_entry(S, l-1-mid, 0), k, mid+1, upper);
     gettimeofday(&end_real, NULL);

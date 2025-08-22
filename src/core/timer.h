@@ -44,8 +44,8 @@ extern FILE * g_timer_stream;
 
 #define REAL_TIMER(lbl, stmt) \
 { \
-static struct timeval start_real, end_real; \
-static double diff_real; \
+struct timeval start_real, end_real; \
+double diff_real; \
 gettimeofday(&start_real, NULL); \
 stmt; \
 gettimeofday(&end_real, NULL); \
