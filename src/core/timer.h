@@ -49,7 +49,7 @@ double diff_real; \
 gettimeofday(&start_real, NULL); \
 stmt; \
 gettimeofday(&end_real, NULL); \
-diff_real = (end_real.tv_sec - start_real.tv_sec); \
+diff_real = (end_real.tv_sec - start_real.tv_sec) + (end_real.tv_usec - start_real.tv_usec) / 1000000.0; \
 printf("%s: %.5f seconds (real time)\n", lbl, diff_real);\
 }
 
