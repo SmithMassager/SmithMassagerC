@@ -17,11 +17,11 @@ lib:
 	$(MAKE) $(MAKEOPTS) --directory=src lib
 	cp src/maple/extern.mpl lib/
 
-#shared:
-#	$(MAKE) $(MAKEOPTS) --directory=src shared
-#
-#examples: lib shared
-#	$(MAKE) $(MAKEOPTS) --directory=examples
+shared:
+	$(MAKE) $(MAKEOPTS) --directory=src shared
+
+examples: lib shared
+	$(MAKE) $(MAKEOPTS) --directory=examples
 
 #tests: lib
 #	$(MAKE) $(MAKEOPTS) --directory=tests tests

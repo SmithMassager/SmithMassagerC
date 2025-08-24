@@ -1,35 +1,60 @@
 export BASEDIR := $(dir $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
 
-export CC      := gcc
-export LDLIBS  := -lopenblas -lgmp -lm -lmaplec -lflint
-export OPENBLAS := $(HOME)/OpenBLAS/install/
+export CC := gcc
+export LDLIBS := -lopenblas -lgmp -lm -lmaplec -lflint
+export prefix := /Users/ziwenwang/repo/flint-nix-builds/
+export OPENBLAS := $(prefix)/openblas/
 export OPENBLAS_LIB_DIR := $(OPENBLAS)/lib/
 export OPENBLAS_INCLUDE_DIR := $(OPENBLAS)/include/
-export GMP := $(HOME)/gmp-6.3.0/install/
+export GMP := $(prefix)/gmp/
 export GMP_LIB_DIR := $(GMP)/lib/
 export GMP_INCLUDE_DIR := $(GMP)/include/
-export FLINT := $(HOME)/flint-3.2.2/install/
+export FLINT := $(prefix)/flint/
 export FLINT_LIB_DIR := $(FLINT)/lib/
-export FLINT_INCLUDE_DIR := $(FLINT)/include/flint/
+export FLINT_INCLUDE_DIR := $(FLINT)/include/
 
 export INSTALL_DIR := ../maple/
 
 #export THREAD := true
 
-export MAPLEDIR := /opt/maple2023/
+export MAPLEDIR := /Library/Frameworks/Maple.framework/Versions/2025/
 
 export LDFLAGS := #empty
 export CFLAGS  := #empty
 
-export OBJDIR := $(BASEDIR)objs/
-export SRCDIR := $(BASEDIR)src/
+export OBJDIR := $(BASEDIR)/objs/
+export SRCDIR := $(BASEDIR)/src/
 
-export LIFTLIB := $(BASEDIR)lib/libhnfproj.a
-export SHAREDLIB := $(BASEDIR)lib/libhnfproj.so
+export STATICLIB := $(BASEDIR)/lib/libhnfproj.a
+export SHAREDLIB := $(BASEDIR)/lib/libhnfproj.so
 
-CFLAGS += -I$(MAPLEDIR)/extern/include/ -Wl,-rpath=$(MAPLEDIR)/bin.X86_64_LINUX/ -fsanitize=undefined
+UNAME_S := $(shell uname -s)
+UNAME_M := $(shell uname -m)
 
-LDFLAGS += -L$(MAPLEDIR)/lib/ -L$(MAPLEDIR)/bin.X86_64_LINUX/ -fsanitize=undefined
+ifeq ($(UNAME_S),Linux)
+  OS := LINUX
+  ifeq ($(UNAME_M),x86_64)
+    ARCH := X86_64
+  else ifeq ($(UNAME_M),arm64)
+    ARCH := ARM64
+  endif
+  MAPLEBIN := $(MAPLEDIR)/bin.$(ARCH)_$(OS)/
+else ifeq ($(UNAME_S),Darwin)
+  OS := APPLE
+  ifeq ($(UNAME_M),x86_64)
+    ARCH := UNIVERSAL_OSX
+  else ifeq ($(UNAME_M),arm64)
+    ARCH := ARM64_MACOS
+  endif
+  MAPLEBIN := $(MAPLEDIR)/bin.$(OS)_$(ARCH)/
+else
+    OS := unknown
+    ARCH := unkonwn
+endif
+
+CFLAGS += -I$(MAPLEDIR)/extern/include/ -Wl,-rpath,$(MAPLEBIN) -Wl,-undefined,dynamic_lookup
+
+LDFLAGS += -L$(MAPLEDIR)/lib/ -L$(MAPLEBIN)
 
 ifdef OPENBLAS_LIB_DIR
   LDFLAGS += -L$(OPENBLAS_LIB_DIR) -L$(HOME)/lib/
@@ -53,15 +78,17 @@ endif
 
 CFLAGS  += -fPIC
 CFLAGS  += -pedantic
-#CFLAGS  += -Wall
-#CFLAGS  += -Wextra
-#CFLAGS  += -Wshadow
-#CFLAGS  += -Wpointer-arith
-#CFLAGS  += -Wcast-align
-#CFLAGS  += -Wstrict-prototypes
-#CFLAGS  += -Wmissing-prototypes
-#CFLAGS  += -Wno-long-long
-#CFLAGS  += -Wno-variadic-macros
+CFLAGS  += -Wno-all
+CFLAGS  += -Wno-extra
+CFLAGS  += -Wshadow
+CFLAGS  += -Wpointer-arith
+CFLAGS  += -Wcast-align
+CFLAGS  += -Wstrict-prototypes
+CFLAGS  += -Wmissing-prototypes
+CFLAGS  += -Wno-long-long
+CFLAGS  += -Wno-variadic-macros
+CFLAGS  += -Wno-implicit-function-declaration
+CFLAGS  += -Wno-int-conversion
 
 ifdef NOTIMER
   CFLAGS  += -DNOTIMER
@@ -70,21 +97,14 @@ ifdef NOPRINT
   CFLAGS  += -DNOPRINT
 endif
 
-CLFAGS +=  -fno-omit-frame-pointer
-LDFLAGS += -fno-omit-frame-pointer
-LDFLAGS  += -O0
-LDFLAGS  += -g
-LDFLAGS  += -DDEBUG
-
-
-#ifdef DEBUG
+ifdef DEBUG
   CFLAGS  += -O0
   CFLAGS  += -g
   CFLAGS  += -DDEBUG
-#else
-#  CFLAGS  += -O3
-#  CFLAGS  += -DNDEBUG
-#endif
+else
+  CFLAGS  += -O3
+  CFLAGS  += -DNDEBUG
+endif
 
 ifdef THREAD
   CFLAGS += -DTHREAD

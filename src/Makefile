@@ -8,18 +8,17 @@ lib: $(LIFTLIB)
 static: $(STATIC)
 
 $(LIFTLIB): $(OBJDIR)*.o
-	  $(CC) $^ $(CFLAGS) $(LDFLAGS) $(LDLIBS) -o a.out
-#$(AR) -r -c -s $@ $^
+	$(AR) -r -c -s $@ $^
 
-#$(SHAREDLIB): $(OBJDIR)*.o
-#	$(CC) $^ $(CFLAGS) $(MAPLEOPTS) -shared $(LDFLAGS) $(LDLIBS) -o $@
+$(SHAREDLIB): $(OBJDIR)*.o
+	$(CC) $^ $(CFLAGS) $(MAPLEOPTS) -shared $(LDFLAGS) $(LDLIBS) -o $@
 
 $(OBJDIR)*.o: iml core lift spinv iherm
 #$(OBJDIR)*.o: iml core lift spinv
 
-#ifdef MAPLEDIR
-#  $(OBJDIR)*.o: maple
-#endif
+ifdef MAPLEDIR
+  $(OBJDIR)*.o: maple
+endif
 
 iml:
 	$(MAKE) $(MAKEOPTS) --directory=iml-1.0.3
