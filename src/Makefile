@@ -2,27 +2,32 @@
 
 CFLAGS += -I$(SRCDIR)iml-1.0.3/src/ -I$(SRCDIR)/include/ -I$(SRCDIR)/lift/ -I$(SRCDIR)/core/ -I$(SRCDIR)/spinv/
 
-lib: $(SHAREDLIB) $(STATIC) $(SMITH)
+lib: $(SMITH) $(SHAREDLIB) $(STATIC)
 
 shared: $(SHAREDLIB)
 static: $(STATIC)
 smith: $(SMITH)
 
-$(SMITH): $(OBJDIR)*.o
-	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(LDLIBS) -o $@
+BASE_DEPS = iml core lift spinv iherm
+MAPLE_DEPS =
 
-$(STATIC): $(OBJDIR)*.o
-	$(AR) -r -c -s $@ $^
+$(OBJDIR)*.o: $(BASE_DEPS)
 
-$(SHAREDLIB): $(OBJDIR)*.o
-	$(CC) $^ $(CFLAGS) $(MAPLEOPTS) -shared $(LDFLAGS) $(LDLIBS) -o $@
+$(SMITH): $(BASE_DEPS)
+		$(CC) $(OBJDIR)/*.o $(CFLAGS) $(LDFLAGS) $(LDLIBS) -o $@
 
-$(OBJDIR)*.o: iml core lift spinv iherm
-#$(OBJDIR)*.o: iml core lift spinv
+$(STATIC): $(BASE_DEPS)
+		$(AR) -r -c -s $@ $(OBJDIR)/*.o
 
 ifdef MAPLEDIR
-  $(OBJDIR)*.o: maple
+$(SHAREDLIB): CFLAGS += -I$(MAPLEDIR)/extern/include/ -Wl,-rpath,$(MAPLEBIN) -Wl,-undefined,dynamic_lookup
+$(SHAREDLIB): LDFLAGS += -L$(MAPLEDIR)/lib/ -L$(MAPLEBIN)
+$(SHAREDLIB): LDLIBS += -lmaplec  # Or -lmaple if that's your lib; confirm from Maple docs
+MAPLE_DEPS = maple
 endif
+
+$(SHAREDLIB): $(BASE_DEPS) $(MAPLE_DEPS)
+		$(CC) $(OBJDIR)/*.o $(CFLAGS) $(MAPLEOPTS) -shared $(LDFLAGS) $(LDLIBS) -o $@
 
 iml:
 	$(MAKE) $(MAKEOPTS) --directory=iml-1.0.3

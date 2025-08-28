@@ -39,7 +39,7 @@ ifeq ($(UNAME_S),Linux)
   else ifeq ($(UNAME_M),arm64)
     ARCH := ARM64
   endif
-  MAPLEBIN := $(MAPLEDIR)/bin.$(ARCH)_$(OS)/
+  export MAPLEBIN := $(MAPLEDIR)/bin.$(ARCH)_$(OS)/
 else ifeq ($(UNAME_S),Darwin)
   OS := APPLE
   ifeq ($(UNAME_M),x86_64)
@@ -47,15 +47,14 @@ else ifeq ($(UNAME_S),Darwin)
   else ifeq ($(UNAME_M),arm64)
     ARCH := ARM64_MACOS
   endif
-  MAPLEBIN := $(MAPLEDIR)/bin.$(OS)_$(ARCH)/
+  export MAPLEBIN := $(MAPLEDIR)/bin.$(OS)_$(ARCH)/
 else
     OS := unknown
     ARCH := unkonwn
 endif
 
-CFLAGS += -I$(MAPLEDIR)/extern/include/ -Wl,-rpath,$(MAPLEBIN) -Wl,-undefined,dynamic_lookup
-
-LDFLAGS += -L$(MAPLEDIR)/lib/ -L$(MAPLEBIN)
+#CFLAGS += -I$(MAPLEDIR)/extern/include/ -Wl,-rpath,$(MAPLEBIN) -Wl,-undefined,dynamic_lookup
+#LDFLAGS += -L$(MAPLEDIR)/lib/ -L$(MAPLEBIN)
 
 ifdef OPENBLAS_LIB_DIR
   LDFLAGS += -L$(OPENBLAS_LIB_DIR)
