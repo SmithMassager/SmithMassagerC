@@ -1,17 +1,35 @@
 #include <assert.h>
 #include <math.h>
 
+#include "smithMassager.h"
 #include "fmpz_mat.h"
 #include "fmpz.h"
 #include "flint.h"
 #include "timer.h"
 #include "basic.h"
+#include "fmpz_rand.h"
 
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define max(a, b) -min(-a,-b)
 
 int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_mat_t A) {
   assert(A->r == A->c);
+  int success = 0;
+  fmpz_rand_init();
+
+  while(!success) {
+    fmpz_mat_zero(U);
+    fmpz_mat_zero(M);
+    fmpz_mat_zero(T);
+    fmpz_mat_zero(S);
+    success = smithMassagerHelper(U, M, T, S, A);
+  }
+
+  fmpz_rand_clear();
+  return success;
+}
+
+int smithMassagerHelper(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_mat_t A) {
   fmpz_t s, thres, p, maxA, maxU, maxUp, tmp;
   fmpz_mat_t B;
   fmpz_mat_t Q;

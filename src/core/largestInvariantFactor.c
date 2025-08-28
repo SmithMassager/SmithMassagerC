@@ -3,6 +3,7 @@
 #include "largestInvariantFactor.h"
 #include "timer.h"
 #include "basic.h"
+#include "fmpz_rand.h"
 
 
 int largestInvariantFactor(fmpz_t s, fmpz_mat_t X, fmpz_mat_t A, fmpz_t startDim) {
@@ -10,13 +11,11 @@ int largestInvariantFactor(fmpz_t s, fmpz_mat_t X, fmpz_mat_t A, fmpz_t startDim
 
   fmpz_t mx, d;
   fmpz_mat_t B;
-  flint_rand_t rand;
   int n = A->c;
 
   fmpz_init(mx);
   fmpz_init(d);
   fmpz_mat_init(B, n, startDim);
-  flint_rand_init(rand);
 
   fmpz_mat_max(mx, A);
   fmpz_mul_ui(mx, mx, fmpz_bits(mx));
@@ -33,7 +32,6 @@ int largestInvariantFactor(fmpz_t s, fmpz_mat_t X, fmpz_mat_t A, fmpz_t startDim
   fmpz_mul(s, s, d);
   fmpz_mat_mod(X, X, s);
 
-  flint_rand_clear(rand);
   fmpz_mat_clear(B);
   fmpz_clear(mx);
   fmpz_clear(d);

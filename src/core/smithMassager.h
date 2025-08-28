@@ -1,5 +1,7 @@
 #pragma once
 
+#include "fmpz_mat.h"
+
 // SmithMassager(A)
 //
 // Input:
@@ -12,3 +14,4 @@
 //   M, with property AM = 0 cmod S
 //   T, unit upper triangular with T + UM = 0 cmod S.
 int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_mat_t A);
+int smithMassagerHelper(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_mat_t A);

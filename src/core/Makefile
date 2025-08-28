@@ -23,6 +23,7 @@ OBJS    += $(OBJDIR)indexMassager.o
 OBJS    += $(OBJDIR)largestInvariantFactor.o
 OBJS    += $(OBJDIR)smithMassager.o
 OBJS    += $(OBJDIR)genHerm.o
+OBJS    += $(OBJDIR)fmpz_rand.o
 OBJS    += $(OBJDIR)main.o
 
 core: $(OBJS)

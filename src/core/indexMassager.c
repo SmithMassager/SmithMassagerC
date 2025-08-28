@@ -6,6 +6,7 @@
 #include "flint.h"
 #include "fmpz_mat.h"
 #include "timer.h"
+#include "fmpz_rand.h"
 
 int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t B, int n, int m, int r, fmpz_t s, int kk, fmpz_mat_t Q) {
   assert(m + r <= n);
@@ -21,7 +22,6 @@ int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_m
 
   int k = 5, success = 1;
   fmpz_mat_t J, J1, J2, P, P1, P2;
-  flint_rand_t rand;
 
   fmpz_mat_init(P, 2*n, r+k);
   fmpz_mat_window_init(P1, P, 0, 0, n, r+k);
@@ -31,7 +31,6 @@ int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_m
     fmpz_mat_init(J, 2*n, r+k);
     fmpz_mat_window_init(J1, J, 0, 0, n, r+k);
     fmpz_mat_window_init(J2, J, n, 0, 2*n, r+k);
-    flint_rand_init(rand);
 
     fmpz_mat_zero(J2);
     fmpz_mat_randtest(J1, rand, fmpz_bits(s));
@@ -46,7 +45,6 @@ int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_m
     fmpz_mat_window_clear(J2);
     fmpz_mat_window_clear(J1);
     fmpz_mat_clear(J);
-    flint_rand_clear(rand);
 
     if (!success) {
       printf("Warning: sB^{-1}J is not integral Or P2 is non-zero \n");
