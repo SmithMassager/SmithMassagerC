@@ -4,7 +4,16 @@ uniCertHelper := DefineExternal("unicert_maple", "lib/libhnfproj.so");
 imlSolveHelper := DefineExternal("imlSolve_maple", "lib/libhnfproj.so");
 dixonSolveHelper := DefineExternal("dixonSolve_maple", "lib/libhnfproj.so");
 highOrderResidue := DefineExternal("highOrderResidue_maple", "lib/libhnfproj.so");
+
+#
+#  C <-- imlMult(A,B)
+#
+#  Input: A - an integer matrix
+#         B - an integer matrix with row dimension equal to column dimension of B
+# Output: C - the product A B
+#
 imlMult := DefineExternal("imlMultiply_maple", "lib/libhnfproj.so");
+
 add_maple := DefineExternal("add_maple", "lib/libhnfproj.so");
 fastIntCertC := DefineExternal("fastIntCert_maple", "lib/libhnfproj.so");
 specialIntCertC := DefineExternal("specialIntCert_maple", "lib/libhnfproj.so");
