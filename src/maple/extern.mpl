@@ -1,9 +1,14 @@
 macro(DefineExternal=ExternalCalling:-DefineExternal);
 
+
 uniCertHelper := DefineExternal("unicert_maple", "lib/libhnfproj.so");
+
 imlSolveHelper := DefineExternal("imlSolve_maple", "lib/libhnfproj.so");
+
 dixonSolveHelper := DefineExternal("dixonSolve_maple", "lib/libhnfproj.so");
+
 highOrderResidue := DefineExternal("highOrderResidue_maple", "lib/libhnfproj.so");
+
 
 #
 #  C <-- imlMult(A,B)
@@ -15,11 +20,17 @@ highOrderResidue := DefineExternal("highOrderResidue_maple", "lib/libhnfproj.so"
 imlMult := DefineExternal("imlMultiply_maple", "lib/libhnfproj.so");
 
 add_maple := DefineExternal("add_maple", "lib/libhnfproj.so");
+
 fastIntCertC := DefineExternal("fastIntCert_maple", "lib/libhnfproj.so");
+
 specialIntCertC := DefineExternal("specialIntCert_maple", "lib/libhnfproj.so");
+
 iherm := DefineExternal("iherm_maple", "lib/libhnfproj.so");
+
 indexMassagerC := DefineExternal("indexMassager_maple", "lib/libhnfproj.so");
+
 largestInvariantFactorC := DefineExternal("largestInvariantFactor_maple", "lib/libhnfproj.so");
+
 smithMassagerC := DefineExternal("smithMassager_maple", "lib/libhnfproj.so");
 
 # cmodMulPL, cmodMulColPL
