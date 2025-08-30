@@ -27,7 +27,11 @@ MAPLE_DEPS = maple
 endif
 
 $(SHAREDLIB): $(BASE_DEPS) $(MAPLE_DEPS)
+ifdef MAPLEDIR
+		$(CC) $(OBJDIR)/*.o $(OBJDIR)/maple/*.o $(CFLAGS) $(MAPLEOPTS) -shared $(LDFLAGS) $(LDLIBS) -o $@
+else
 		$(CC) $(OBJDIR)/*.o $(CFLAGS) $(MAPLEOPTS) -shared $(LDFLAGS) $(LDLIBS) -o $@
+endif
 
 iml:
 	$(MAKE) $(MAKEOPTS) --directory=iml-1.0.3

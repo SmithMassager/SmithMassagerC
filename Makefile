@@ -14,6 +14,7 @@ lib:
 	mkdir -p lib
 	mkdir -p bin
 	mkdir -p objs
+	mkdir -p objs/maple
 	$(MAKE) $(MAKEOPTS) --directory=src lib
 	cp src/maple/extern.mpl lib/
 

@@ -1,7 +1,7 @@
 .PHONY: maple
 
 OBJS    := #empty
-OBJS    += $(OBJDIR)maple_call.o
+OBJS    += $(OBJDIR)/maple/maple_call.o
 
 CFLAGS += $(MAPLEOPTS)
 CFLAGS += -I$(BASEDIR)include
@@ -13,6 +13,6 @@ CFLAGS += -I$(SRCDIR)lift
 
 maple: $(OBJS)
 
-$(OBJDIR)%.o : %.c
+$(OBJDIR)/maple/%.o : %.c
 	$(CC) $< $(CFLAGS) -c -o $@
 
