@@ -1,10 +1,13 @@
-#include <unistd.h>
 #include <assert.h>
 
 #include "basic.h"
 #include "projection.h"
 #include "timer.h"
 
+/* Compute the (S, U, M, T) decomposition of the projection P over
+ * Z/(s).  P is n x (r+k), with the first r columns the "data" columns
+ * and the last k columns acting as fresh randomness for the
+ * divide-and-conquer SNF.  Returns 1 on success. */
 int computeProjBasis(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t P, int n, int r, fmpz_t s, int k) {
   assert(S->r == r);
   assert(S->c == 1);
@@ -25,17 +28,7 @@ int computeProjBasis(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmp
     fmpz_set_ui(fmpz_mat_entry(S, i, 0), 1);
   }
   int success;
-  char lbl_buffer[100];  // Buffer size: make it large enough for your label
-  snprintf(lbl_buffer, sizeof(lbl_buffer), "SNF with size %d, %d %d", r-1, 0, r-1);
-  struct timeval start_real, end_real;
-  double diff_real;
-  gettimeofday(&start_real, NULL);
-  success = SNF(S, U, M, T, P1, E, n, r, s, k, 0, r-1);
-  gettimeofday(&end_real, NULL);
-  diff_real = (end_real.tv_sec - start_real.tv_sec) + (end_real.tv_usec - start_real.tv_usec) / 1000000.0;
-  printf("%s: %.5f seconds (real time)\n", lbl_buffer, diff_real);
-
-  //success = SNF(S, U, M, T, P1, E, n, r, s, k, 0, r-1);
+  REAL_TIMER("SNF", success = SNF(S, U, M, T, P1, E, n, r, s, k, 0, r-1));
   fmpz_mat_neg(M, M);
 
   fmpz_mat_window_clear(P1);
@@ -43,6 +36,10 @@ int computeProjBasis(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmp
   return success;
 }
 
+/* Recursive divide-and-conquer modular Smith form on the column range
+ * [lower, upper] of P, working modulo s.  Updates S, U, M, T in place.
+ * Returns 1 on success, 0 if the divisibility check at a D&C node
+ * fails (signals a non-maximal massager). */
 int SNF(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t P, fmpz_mat_t E, int n, int r, fmpz_t s, int k, int lower, int upper) {
   int success = 1;
   if (fmpz_cmp_ui(s, 1) == 0) return 1;
@@ -115,19 +112,7 @@ SNFclear:
     fmpz_mat_clear(muE);
     fmpz_mat_clear(F);
   } else {
-    // TODO: DELETE THIS AFTER
-    char lbl_buffer[100];  // Buffer size: make it large enough for your label
-    snprintf(lbl_buffer, sizeof(lbl_buffer), "SNF with size %d, %d %d", mid-lower, lower, mid);
-    struct timeval start_real, end_real;
-    double diff_real;
-    gettimeofday(&start_real, NULL);
     success = SNF(S, U, M, T, P, E, n, r, s, k, lower, mid);
-    gettimeofday(&end_real, NULL);
-    diff_real = (end_real.tv_sec - start_real.tv_sec) + (end_real.tv_usec - start_real.tv_usec) / 1000000.0;
-    printf("%s: %.5f seconds (real time)\n", lbl_buffer, diff_real);
-    // TODO: DELETE THIS AFTER
-
-    //success = SNF(S, U, M, T, P, E, n, r, s, k, lower, mid);
 
     if (!success) goto SNFend;
     fmpz_t divisor;
@@ -148,7 +133,6 @@ SNFclear:
     fmpz_mod_mat_inv(Q, TW, sctx);
     fmpz_mod_mat_multiplyHelper(UP, U, l-1-mid, 0, l-lower, n, P, 0, mid+1, n, upper+1, sctx);
     fmpz_mod_mat_mul(UP, Q, UP, sctx);
-    //fmpz_mod_mat_multiplyHelper(UP, Q, 0, 0, fmpz_mat_nrows(Q), fmpz_mat_ncols(Q), UP, 0, 0, fmpz_mat_nrows(UP), fmpz_mat_ncols(UP), sctx);
     fmpz_mod_mat_multiplyHelper(MQUP, M, 0, l-1-mid, n, l-lower, UP, 0, 0, fmpz_mat_nrows(UP), fmpz_mat_ncols(UP), sctx);
     fmpz_mod_mat_sub(PW, PW, MQUP, sctx);
     if (fmpz_cmp_ui(fmpz_mat_entry(S, l-1-mid, 0), 0) == 0) {
@@ -159,12 +143,11 @@ SNFclear:
     fmpz_mod_ctx_set_modulus(dctx, divisor);
     fmpz_mod_mat_set_fmpz_mat(PWCpy, PW, dctx);
     if (!fmpz_mat_is_zero(PWCpy)) {
-      printf("D&C: P - MQUP not divisble\n");
       success = 0;
       goto SNFClearElse;
     }
     fmpz_mat_scalar_divexact_fmpz(PW, PW, divisor);
-    
+
 SNFClearElse:
     fmpz_clear(divisor);
     fmpz_mod_mat_clear(Q, sctx);
@@ -180,20 +163,7 @@ SNFClearElse:
 SNFend:
   fmpz_clear(tmp);
   if (success && lower != upper) {
-    // TODO: DELETE THIS AFTER
-    char lbl_buffer[100];  // Buffer size: make it large enough for your label
-    snprintf(lbl_buffer, sizeof(lbl_buffer), "SNF with size %d, %d %d", upper-(mid+1), mid+1, upper);
-    struct timeval start_real, end_real;
-    double diff_real;
-    gettimeofday(&start_real, NULL);
-    success = SNF(S, U, M, T, P, E, n, r, fmpz_mat_entry(S, l-1-mid, 0), k, mid+1, upper);
-    gettimeofday(&end_real, NULL);
-    diff_real = (end_real.tv_sec - start_real.tv_sec) + (end_real.tv_usec - start_real.tv_usec) / 1000000.0;
-    printf("%s: %.5f seconds (real time)\n", lbl_buffer, diff_real);
-    return success;
-    // TODO: DELETE THIS AFTER
-
-    //return SNF(S, U, M, T, P, E, n, r, fmpz_mat_entry(S, l-1-mid, 0), k, mid+1, upper);
+    return SNF(S, U, M, T, P, E, n, r, fmpz_mat_entry(S, l-1-mid, 0), k, mid+1, upper);
   }
-  else return success;
+  return success;
 }

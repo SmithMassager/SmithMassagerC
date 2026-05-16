@@ -6,7 +6,15 @@
 #include "fmpz_rand.h"
 
 
-int largestInvariantFactor(fmpz_t s, fmpz_mat_t X, fmpz_mat_t A, fmpz_t startDim) {
+/* Compute s, a multiple of the largest invariant factor of A, and
+ * the projection X = s * A^{-1} * B mod s for a random B with
+ * `startDim` columns.
+ *
+ * Note: the random matrix is generated with fmpz_mat_randbits (uniform
+ * random).  fmpz_mat_randtest must not be used here -- it is FLINT's
+ * edge-case generator and produces sparse / structured matrices that
+ * violate the algorithm's randomness assumption. */
+int largestInvariantFactor(fmpz_t s, fmpz_mat_t X, fmpz_mat_t A, slong startDim) {
   assert(A->c == A->r);
 
   fmpz_t mx, d;
@@ -24,7 +32,7 @@ int largestInvariantFactor(fmpz_t s, fmpz_mat_t X, fmpz_mat_t A, fmpz_t startDim
   fmpz_mul_ui(mx, mx, 20);
   fmpz_add_ui(mx, mx, 60);
   fmpz_set_ui(s, 1);
-  fmpz_mat_randtest(B, rand, fmpz_bits(mx));
+  fmpz_mat_randbits(B, rand, fmpz_bits(mx));
 
   REAL_TIMER("ImlSolve in largestInvariantFactor", fmpz_mat_imlSolve(X, d, A, B));
   fmpz_mat_extractLCM(s, X, d);

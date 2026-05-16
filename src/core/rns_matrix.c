@@ -255,13 +255,17 @@ static void * residue_gemm_thread(void * arg)
   return NULL;
 }
 
+/* Multiply two RNS matrices A * B -> dst, one thread per residue.
+ * Per-thread arrays are dynamically sized to dst->nmod, since the
+ * number of RNS moduli can exceed any small constant for large
+ * matrices with big entries. */
 void rnsMatrix_gemm(rnsMatrix_t * dst, rnsMatrix_t const * A, rnsMatrix_t const * B)
 {
-  gemm_args_t args[32];
-  pthread_t thread[32];
-
   long j;
   long nmod = dst->nmod;
+  gemm_args_t * args = malloc(nmod * sizeof(gemm_args_t));
+  pthread_t * thread = malloc(nmod * sizeof(pthread_t));
+
   for (j = 0; j < nmod; ++j) {
     args[j].dst = dst->residues[j];
     args[j].A = A->residues[j];
@@ -272,6 +276,8 @@ void rnsMatrix_gemm(rnsMatrix_t * dst, rnsMatrix_t const * A, rnsMatrix_t const 
   for (j = 0; j < nmod; ++j) {
     pthread_join(thread[j], NULL);
   }
+  free(args);
+  free(thread);
 }
 
 struct quadLift_args {
@@ -290,15 +296,18 @@ static void * residue_quadLift_thread(void * arg)
   return NULL;
 }
 
+/* Quadratic-lift kernel: one thread per residue computes
+ *    dst[i] = Xinv[i] * (T[i] - A[i] * M[i]) mod p_i.
+ * Per-thread arrays are dynamically sized to dst->nmod. */
 void rnsMatrix_quadLift(rnsMatrix_t * dst, rnsMatrix_t const * T,
                         rnsMatrix_t const * A, rnsMatrix_t const * M,
                         long const * Xinv)
 {
-  quadLift_args_t args[32];
-  pthread_t thread[32];
-
   long j;
   long nmod = dst->nmod;
+  quadLift_args_t * args = malloc(nmod * sizeof(quadLift_args_t));
+  pthread_t * thread = malloc(nmod * sizeof(pthread_t));
+
   for (j = 0; j < nmod; ++j) {
     args[j].dst = dst->residues[j];
     args[j].T = T->residues[j];
@@ -311,6 +320,8 @@ void rnsMatrix_quadLift(rnsMatrix_t * dst, rnsMatrix_t const * T,
   for (j = 0; j < nmod; ++j) {
     pthread_join(thread[j], NULL);
   }
+  free(args);
+  free(thread);
 }
 #endif
 

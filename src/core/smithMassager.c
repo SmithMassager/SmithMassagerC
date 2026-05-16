@@ -12,6 +12,20 @@
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define max(a, b) -min(-a,-b)
 
+/* ceil(log2(x)) for x >= 1; returns 0 for x <= 1. */
+static int ceil_log2(int x) {
+  int l = 0, v = 1;
+  while (v < x) { v <<= 1; l++; }
+  return l;
+}
+
+/* Compute the Smith normal form of A.
+ *
+ * smithMassager runs the Las Vegas algorithm until it succeeds; each
+ * attempt is one call to smithMassagerHelper.  Outputs (U, M, T, S)
+ * such that the 2n x 2n matrix B in equation (1) of
+ * Birmpilis-Labahn-Storjohann (ISSAC 2020) is unimodular.  In
+ * particular, S is the Smith normal form of A. */
 int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_mat_t A) {
   assert(A->r == A->c);
   int success = 0;
@@ -29,6 +43,14 @@ int smithMassager(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_m
   return success;
 }
 
+/* One attempt of the Smith massager.  Phase 1 computes a multiple of
+ * the largest invariant factor s_n via largestInvariantFactor.
+ * Phase 2 iteratively extracts the invariant factors in batches using
+ * indexMassager; the batch size grows with each iteration and the
+ * last batch is taken in one shot once the working modulus s shrinks
+ * to ~word size.  Phase 3 verifies the result via fmpz_uniCert.
+ *
+ * Returns 1 on success, 0 if any randomized step fails. */
 int smithMassagerHelper(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, fmpz_mat_t A) {
   fmpz_t s, thres, p, maxA, maxU, maxUp, tmp;
   fmpz_mat_t B;
@@ -37,7 +59,8 @@ int smithMassagerHelper(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, 
 
   i = sumR = r = 0;
   n = A->r;
-  k = startDim = 6;
+  startDim = 6;
+  k = ceil_log2(startDim) + 4;
   success = 1;
 
   fmpz_mat_init(B, 2*n, 2*n);
@@ -55,20 +78,17 @@ int smithMassagerHelper(fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t S, 
   fmpz_mat_cpy(B, 0, 0, n, n, A, 0, 0, n, n);
 
   REAL_TIMER("largestInvFactor", largestInvariantFactor(s, Q, A, startDim+k));
-  //largestInvariantFactor(s, Q, A, startDim+k);
   while (sumR < n) {
     fmpz_mat_t Up, Mp, Tp, Sp, SpInv, MpSpInv, Update, TpSpInv, UpMp, NegUpM, Msub, Usub, concat;
     if (i == 0) {
       r = min(startDim, n-sumR);
     } else {
       int sbits = fmpz_bits(s);
-      printf("oldsbits, sbits %d %d\n", oldsbits, sbits);
       r = min(max(bits(oldsbits - sbits)*i, startDim*i), n-sumR);
       if (sbits < 26) r = n-sumR;
     }
     oldsbits = fmpz_bits(s);
 
-    printf("SmithMassager: iteration %d and r %d\n", i, r);
     fmpz_mat_init(Up, r, n);
     fmpz_mat_init(Mp, n, r);
     fmpz_mat_init(Tp, r, r);
@@ -196,27 +216,10 @@ cleanInner:
     fmpz_mat_cpy(E, 0, n, n, 2*n-l, B, 0, n+l, n, 2*n);
     fmpz_mat_cpy(E, n, n, 2*n-l, 2*n-l, B, n+l, n+l, 2*n, 2*n);
 
-    char lbl[20] = "uniCert";
-    static struct timeval start_real, end_real;
-    static double diff_real;
-    gettimeofday(&start_real, NULL);
-    success = fmpz_uniCert(E);
-    gettimeofday(&end_real, NULL);
-    diff_real = (end_real.tv_sec - start_real.tv_sec) + (end_real.tv_usec - start_real.tv_usec) / 1000000.0;
-    printf("%s: %.5f seconds (real time)\n", lbl, diff_real);
-
-    //TIMER_REAL("uniCert:", success = fmpz_uniCert(E));
-
+    REAL_TIMER("uniCert", success = fmpz_uniCert(E));
     fmpz_mat_clear(E);
   } else {
-    char lbl[20] = "uniCert";
-    static struct timeval start_real, end_real;
-    static double diff_real;
-    gettimeofday(&start_real, NULL);
-    success = fmpz_uniCert(B);
-    gettimeofday(&end_real, NULL);
-    diff_real = (end_real.tv_sec - start_real.tv_sec) + (end_real.tv_usec - start_real.tv_usec) / 1000000.0;
-    printf("%s: %.5f seconds (real time)\n", lbl, diff_real);
+    REAL_TIMER("uniCert", success = fmpz_uniCert(B));
   }
 
 cleanOuter:

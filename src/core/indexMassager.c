@@ -8,6 +8,31 @@
 #include "timer.h"
 #include "fmpz_rand.h"
 
+/* ceil(log2(x)) for x >= 1; returns 0 for x <= 1. */
+static int ceil_log2(int x) {
+  int l = 0, v = 1;
+  while (v < x) { v <<= 1; l++; }
+  return l;
+}
+
+/* Compute an index-(m, r) Smith massager (S, U, M, T) for the 2n x 2n
+ * matrix B by random projection P = Rem(s * B^{-1} * J, s) followed by
+ * a modular Smith form computation.
+ *
+ * If Q is non-empty, the precomputed projection from
+ * largestInvariantFactor is reused (saves one integrality certificate
+ * call); otherwise a fresh random J is generated and certified.
+ *
+ * `kk` is the number of extra projection columns used when reusing Q;
+ * otherwise a local k is chosen.
+ *
+ * Note: the random matrix J is generated with fmpz_mat_randbits
+ * (uniform random).  fmpz_mat_randtest must not be used here -- it
+ * produces sparse / structured matrices that violate the algorithm's
+ * randomness assumption.
+ *
+ * Returns 1 on success, 0 if a randomized step fails (caller should
+ * retry the whole Smith massager attempt). */
 int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_mat_t B, int n, int m, int r, fmpz_t s, int kk, fmpz_mat_t Q) {
   assert(m + r <= n);
   if (fmpz_cmp_ui(s, 1) == 0) {
@@ -20,7 +45,7 @@ int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_m
     return 1;
   }
 
-  int k = 5, success = 1;
+  int k = ceil_log2(r) + 4, success = 1;
   fmpz_mat_t J, J1, J2, P, P1, P2;
 
   fmpz_mat_init(P, 2*n, r+k);
@@ -33,7 +58,7 @@ int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_m
     fmpz_mat_window_init(J2, J, n, 0, 2*n, r+k);
 
     fmpz_mat_zero(J2);
-    fmpz_mat_randtest(J1, rand, fmpz_bits(s));
+    fmpz_mat_randbits(J1, rand, fmpz_bits(s));
     fmpz_mat_mod(J1, J1, s);
     REAL_TIMER("specialIntCert", success = specialIntCert(P, s, B, J, n, r+k, m));
 
@@ -57,9 +82,6 @@ int indexMassager(fmpz_mat_t S, fmpz_mat_t U, fmpz_mat_t M, fmpz_mat_t T, fmpz_m
   }
   
   REAL_TIMER("computeProjBasis", success = computeProjBasis(S, U, M, T, P1, n, r, s, k));
-  if (!success) {
-    printf("computeProjBasis returned false\n");
-  }
 
   fmpz_mat_cmod(M, M, S);
 clear:
